@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ConfíComputos — Tecnología y Papelería para tu negocio</title>
+  <meta name="description" content="ConfíComputos: tu aliado en tecnología, papelería y soluciones empresariales en Colombia.">
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/landing.css">
+<style>
+/* ══ CHATBOT ══ */
+#chat-fab{position:fixed;bottom:28px;right:28px;z-index:1050;width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,#ec4899,#be185d);border:none;box-shadow:0 4px 20px rgba(190,24,93,.4);display:flex;align-items:center;justify-content:center;font-size:26px;cursor:pointer;transition:transform .2s}
+#chat-fab:hover{transform:scale(1.1)}
+.chat-notif{position:absolute;top:-2px;right:-2px;width:16px;height:16px;background:#22c55e;border-radius:50%;border:2px solid #fff;animation:pulse-dot 2s ease infinite}
+@keyframes pulse-dot{0%,100%{transform:scale(1)}50%{transform:scale(1.3)}}
+#chat-window{position:fixed;bottom:100px;right:28px;z-index:1049;width:340px;max-width:calc(100vw - 40px);background:#fff;border-radius:20px;box-shadow:0 8px 40px rgba(0,0,0,.18);display:none;flex-direction:column;overflow:hidden;border:1.5px solid #fbcfe8;animation:popIn .25s ease}
+#chat-window.open{display:flex}
+.chat-header{background:linear-gradient(135deg,#db2777,#9d174d);padding:14px 18px;display:flex;align-items:center;gap:10px}
+.ch-avatar{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.ch-name{font-weight:700;font-size:14px;color:#fff}.ch-status{font-size:11px;color:rgba(255,255,255,.75)}
+.ch-close{margin-left:auto;background:none;border:none;color:#fff;font-size:20px;cursor:pointer;opacity:.75;padding:2px 6px}.ch-close:hover{opacity:1}
+.chat-body{flex:1;overflow-y:auto;padding:14px;max-height:320px;background:#fafafa;display:flex;flex-direction:column;gap:10px}
+.chat-msg{max-width:82%;padding:10px 14px;border-radius:16px;font-size:13px;line-height:1.55}
+.chat-msg.bot{background:#fff;border:1px solid #fbcfe8;color:#111827;border-bottom-left-radius:4px;align-self:flex-start}
+.chat-msg.user{background:linear-gradient(135deg,#ec4899,#be185d);color:#fff;border-bottom-right-radius:4px;align-self:flex-end}
+.chat-msg .msg-time{font-size:10px;opacity:.6;margin-top:4px;text-align:right}
+.chat-typing{display:flex;gap:4px;align-items:center;padding:10px 14px;background:#fff;border:1px solid #fbcfe8;border-radius:16px;border-bottom-left-radius:4px;align-self:flex-start;width:fit-content}
+.chat-typing span{width:7px;height:7px;background:#f472b6;border-radius:50%;animation:blink 1.2s ease infinite}
+.chat-typing span:nth-child(2){animation-delay:.2s}.chat-typing span:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
+.chat-footer{padding:10px;border-top:1px solid #fbcfe8;display:flex;gap:8px}
+.chat-footer input{flex:1;border:1.5px solid #f9a8d4;border-radius:20px;padding:8px 14px;font-size:13px;outline:none;font-family:inherit;transition:border-color .2s}
+.chat-footer input:focus{border-color:#ec4899}
+.chat-footer button{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#ec4899,#be185d);border:none;color:#fff;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;transition:transform .15s}.chat-footer button:hover{transform:scale(1.1)}
+.chat-options{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chat-opt-btn{background:#fff0f5;border:1px solid #f9a8d4;border-radius:20px;padding:5px 12px;font-size:12px;color:#be185d;cursor:pointer;font-family:inherit;transition:background .15s}.chat-opt-btn:hover{background:#fce7f3}
+@media(max-width:480px){#chat-window{width:calc(100vw - 32px);right:16px;bottom:80px}#chat-fab{right:16px;bottom:16px}}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════
+     NAVBAR
+════════════════════════════════════════════════ -->
+<nav class="navbar" id="navbar">
+  <div class="nav-brand">
+    <div class="nav-logo-wrap">
+      <img src="img/logo.jpeg" alt="ConfíComputos" class="nav-logo">
+    </div>
+    <div class="nav-brand-name">
+      ConfíComputos
+      <span>Tecnología &amp; Papelería</span>
+    </div>
+  </div>
+  <div class="nav-spacer"></div>
+  <div class="nav-links">
+    <a href="#nosotros">Nosotros</a>
+    <a href="#servicios">Servicios</a>
+    <a href="#porque">¿Por qué nosotros?</a>
+    <a href="#contacto">Contacto</a>
+    <a href="app.html" class="btn btn-rosa nav-cta">Abrir aplicación →</a>
+  </div>
+  <button class="hamburger" id="hamburger" aria-label="Menú">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- Menú móvil -->
+<div class="mobile-menu" id="mobile-menu">
+  <a href="#nosotros">Nosotros</a>
+  <a href="#servicios">Servicios</a>
+  <a href="#porque">¿Por qué nosotros?</a>
+  <a href="#contacto">Contacto</a>
+  <a href="app.html" class="btn btn-rosa" style="margin-top:12px;justify-content:center">Abrir aplicación →</a>
+</div>
+
+
+<!-- ════════════════════════════════════════════════
+     HERO
+════════════════════════════════════════════════ -->
+<section class="hero" id="inicio">
+  <div class="hero-content">
+    <div class="hero-text">
+      <div class="hero-eyebrow">🌸 Bienvenido a ConfíComputos</div>
+      <h1 class="hero-title">
+        Tu tienda de<br>
+        <span>tecnología y papelería</span><br>
+        de confianza
+      </h1>
+      <p class="hero-desc">
+        Ofrecemos productos de calidad, atención personalizada y una plataforma digital que simplifica cada compra. Llevamos más de 5 años siendo el aliado de empresas, estudiantes y profesionales en Colombia.
+      </p>
+      <div class="hero-actions">
+        <a href="app.html" class="btn btn-rosa btn-lg">Abrir aplicación</a>
+        <a href="#nosotros" class="btn btn-outline btn-lg">Conocer más</a>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <div class="num" data-target="1500" data-suffix="+">0+</div>
+          <div class="lbl">Clientes activos</div>
+        </div>
+        <div class="hero-stat">
+          <div class="num" data-target="200" data-suffix="+">0+</div>
+          <div class="lbl">Productos</div>
+        </div>
+        <div class="hero-stat">
+          <div class="num" data-target="5" data-suffix=" años">0 años</div>
+          <div class="lbl">De experiencia</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-visual">
+      <div class="hero-mockup">
+        <div class="hm-header">
+          <div class="hm-logo">C</div>
+          <div><div class="hm-title">ConfíComputos</div><div class="hm-sub">Panel de gestión</div></div>
+        </div>
+        <div class="hm-stats">
+          <div class="hm-stat"><div class="v">$4.5M</div><div class="l">Ventas del mes</div></div>
+          <div class="hm-stat"><div class="v">87</div><div class="l">Pedidos activos</div></div>
+          <div class="hm-stat"><div class="v">20</div><div class="l">Productos</div></div>
+          <div class="hm-stat"><div class="v">98%</div><div class="l">Satisfacción</div></div>
+        </div>
+        <div class="hm-products">
+          <div class="hm-prod"><span class="e">💻</span><span class="n">Laptop ProMax</span><span class="p">$2.850.000</span></div>
+          <div class="hm-prod"><span class="e">📓</span><span class="n">Cuaderno Univ.</span><span class="p">$8.500</span></div>
+          <div class="hm-prod"><span class="e">🖊️</span><span class="n">Bolígrafos x12</span><span class="p">$12.000</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════════
+     NOSOTROS
+════════════════════════════════════════════════ -->
+<section id="nosotros">
+  <div class="section-wrap">
+    <div class="nosotros-grid">
+      <div class="nosotros-img">
+        <div class="nosotros-img-placeholder">
+          <!-- LOGO GRANDE: reemplaza con <img src="assets/img/logo.png"> -->
+          <div class="logo-grande">
+            <img src="img/logo.jpeg" alt="ConfíComputos" class="nav-logo">
+          </div>
+          
+        </div>
+      </div>
+      <div class="nosotros-content">
+        <div class="tag">Nuestra historia</div>
+        <h2>¿Quiénes somos?</h2>
+        <p>
+          <strong>ConfíComputos</strong> nació en 2019 con una misión clara: llevar tecnología de calidad y productos de papelería a personas y empresas colombianas, con precios justos y atención honesta.
+        </p>
+        <p>
+          Empezamos siendo una pequeña tienda local con apenas 30 productos. Hoy contamos con más de 200 referencias, una plataforma digital propia y clientes en todo el país. Cada producto que vendemos ha sido seleccionado cuidadosamente para garantizar calidad y durabilidad.
+        </p>
+        <p>
+          Creemos en el comercio justo, en la tecnología accesible y en que cada cliente merece ser atendido con respeto y compromiso.
+        </p>
+        <div class="hitos">
+          <div class="hito">
+            <div class="hito-icon">🚀</div>
+            <div class="hito-text">
+              <strong>2019 — Fundación</strong>
+              <span>Abrimos nuestra primera tienda física con 30 productos seleccionados.</span>
+            </div>
+          </div>
+          <div class="hito">
+            <div class="hito-icon">🌐</div>
+            <div class="hito-text">
+              <strong>2021 — Digitalización</strong>
+              <span>Lanzamos nuestra plataforma web para gestión de pedidos y ventas.</span>
+            </div>
+          </div>
+          <div class="hito">
+            <div class="hito-icon">📦</div>
+            <div class="hito-text">
+              <strong>2023 — Expansión</strong>
+              <span>Superamos los 1.000 clientes activos y ampliamos nuestro catálogo.</span>
+            </div>
+          </div>
+          <div class="hito">
+            <div class="hito-icon">💡</div>
+            <div class="hito-text">
+              <strong>2025 — Hoy</strong>
+              <span>Sistema de gestión completo para administradores y clientes.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════════
+     SERVICIOS
+════════════════════════════════════════════════ -->
+<section id="servicios">
+  <div class="section-wrap">
+    <div class="section-header">
+      <div class="section-tag">Lo que ofrecemos</div>
+      <h2 class="section-title">Nuestros <span>servicios</span></h2>
+      <p class="section-desc">Desde equipos de cómputo hasta el último bolígrafo, tenemos todo lo que necesitas para tu negocio o estudio.</p>
+    </div>
+    <div class="servicios-grid">
+      <div class="servicio-card">
+        <div class="servicio-icon">💻</div>
+        <h3>Tecnología</h3>
+        <p>Laptops, tablets, monitores, accesorios y periféricos de las mejores marcas, con garantía y soporte técnico incluido.</p>
+      </div>
+      <div class="servicio-card">
+        <div class="servicio-icon">📓</div>
+        <h3>Papelería Completa</h3>
+        <p>Cuadernos, resmas, marcadores, archivadores y todo lo que necesitas para la oficina, el colegio o la universidad.</p>
+      </div>
+      <div class="servicio-card">
+        <div class="servicio-icon">🖨️</div>
+        <h3>Impresión y Copiado</h3>
+        <p>Impresoras láser y de tinta, cartuchos, tóner y servicio de impresión para documentos y proyectos.</p>
+      </div>
+      <div class="servicio-card">
+        <div class="servicio-icon">🛒</div>
+        <h3>Tienda en Línea</h3>
+        <p>Compra desde cualquier lugar, elige tu método de pago y recoge en nuestro punto físico en minutos.</p>
+      </div>
+      <div class="servicio-card">
+        <div class="servicio-icon">📊</div>
+        <h3>Gestión Empresarial</h3>
+        <p>Panel administrativo completo con inventario, ganancias, historial de pedidos y gestión de usuarios.</p>
+      </div>
+      <div class="servicio-card">
+        <div class="servicio-icon">🔧</div>
+        <h3>Soporte Técnico</h3>
+        <p>Asesoría personalizada, configuración de equipos y soporte post-venta para garantizar tu satisfacción.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════════
+     POR QUÉ NOSOTROS
+════════════════════════════════════════════════ -->
+<section id="porque">
+  <div class="section-wrap">
+    <div class="section-header">
+      <div class="section-tag">Nuestras ventajas</div>
+      <h2 class="section-title">¿Por qué elegir <span>ConfíComputos?</span></h2>
+      <p class="section-desc">Más que una tienda, somos tu aliado tecnológico y de papelería de confianza.</p>
+    </div>
+    <div class="porque-grid">
+      <div class="porque-item">
+        <div class="porque-num">01</div>
+        <h4>Precios justos</h4>
+        <p>Trabajamos directamente con proveedores para ofrecerte los mejores precios del mercado sin intermediarios.</p>
+      </div>
+      <div class="porque-item">
+        <div class="porque-num">02</div>
+        <h4>Recogida rápida</h4>
+        <p>Haz tu pedido en línea y recógelo en nuestro punto físico en 10, 15 o 20 minutos. Cero esperas.</p>
+      </div>
+      <div class="porque-item">
+        <div class="porque-num">03</div>
+        <h4>Pagos seguros</h4>
+        <p>Tarjeta de crédito, Nequi o efectivo. Todas las opciones para que pagues como prefieras.</p>
+      </div>
+      <div class="porque-item">
+        <div class="porque-num">04</div>
+        <h4>Confirmación SMS</h4>
+        <p>Recibe confirmación inmediata de tu pedido por mensaje de texto a tu celular registrado.</p>
+      </div>
+      <div class="porque-item">
+        <div class="porque-num">05</div>
+        <h4>Catálogo amplio</h4>
+        <p>Más de 200 productos entre tecnología, accesorios y papelería, siempre actualizados y en stock.</p>
+      </div>
+      <div class="porque-item">
+        <div class="porque-num">06</div>
+        <h4>Atención humana</h4>
+        <p>Un equipo real que te escucha, resuelve tus dudas y te acompaña en cada compra.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════════
+     APP CTA
+════════════════════════════════════════════════ -->
+<section id="app-cta">
+  <div class="section-wrap">
+    <div class="section-header">
+      <div class="section-tag" style="background:rgba(255,255,255,.15);color:#fff">Plataforma digital</div>
+      <h2 class="section-title">Gestiona todo desde <span style="color:var(--rosa-300)">una sola plataforma</span></h2>
+      <p class="section-desc">Ya seas cliente o administrador, nuestra aplicación tiene todo lo que necesitas.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:800px;margin:0 auto">
+      <div class="cta-card">
+        <h3>👤 Para clientes</h3>
+        <p>Explora el catálogo, agrega al carrito, paga en línea y recoge tu pedido en minutos.</p>
+        <a href="app.html" class="btn btn-white btn-full">Ingresar como usuario</a>
+      </div>
+      <div class="cta-card">
+        <h3>🛡️ Para administradores</h3>
+        <p>Gestiona productos, inventario, pedidos en tiempo real y usuarios de la plataforma.</p>
+        <a href="app.html" class="btn btn-white-outline btn-full">Panel administrador</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════════
+     CONTACTO
+════════════════════════════════════════════════ -->
+<section id="contacto">
+  <div class="section-wrap">
+    <div class="section-header">
+      <div class="section-tag">Encuéntranos</div>
+      <h2 class="section-title">Información de <span>contacto</span></h2>
+      <p class="section-desc">Estamos aquí para ayudarte. Visítanos o escríbenos cuando necesites.</p>
+    </div>
+    <div class="contacto-grid">
+      <div>
+        <div class="contacto-logo-wrap">
+          
+          <div class="logo-placeholder"><img src="img/logo.jpeg" alt="ConfíComputos" class="nav-logo"></div>
+          
+        </div>
+        <h3 class="contacto-info" style="font-size:20px;color:var(--gris-900);margin-bottom:18px">ConfíComputos</h3>
+        <!-- ═══ INFORMACIÓN DE CONTACTO — Completa estos datos ═══ -->
+        <div class="contacto-item">
+          <div class="c-icon">📍</div>
+          <div class="c-item-text">
+            <strong>Dirección</strong>
+            <span>Calle XX # XX - XX, Ciudad Bogota, Bosa Santa fe, Colombia</span>
+          </div>
+        </div>
+        <div class="contacto-item">
+          <div class="c-icon">📞</div>
+          <div class="c-item-text">
+            <strong>Teléfono / WhatsApp</strong>
+            <span>+57 304 362 8606</span>
+          </div>
+        </div>
+        <div class="contacto-item">
+          <div class="c-icon">✉️</div>
+          <div class="c-item-text">
+            <strong>Correo electrónico</strong>
+            <span>papeleriaconficomputos@gmail.com</span>
+          </div>
+        </div>
+        <div class="contacto-item">
+          <div class="c-icon">🕐</div>
+          <div class="c-item-text">
+            <strong>Horario de atención</strong>
+            <span>Lun – Vie: 8:00am – 8:00pm - Sáb: 8:00am – 3:00pm</span>
+          </div>
+        </div>
+        <div class="contacto-item">
+          <div class="c-icon">🌐</div>
+          <div class="c-item-text">
+            <strong>Redes sociales</strong>
+            <span>@conficomputos</span>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="card" style="height:100%">
+          <div class="card-title">📬 Escríbenos</div>
+          <div class="form-group"><label>Tu nombre</label><input type="text" placeholder="Nombre completo"></div>
+          <div class="form-group"><label>Correo electrónico</label><input type="email" placeholder="correo@ejemplo.com"></div>
+          <div class="form-group"><label>Asunto</label><input type="text" placeholder="¿En qué te podemos ayudar?"></div>
+          <div class="form-group"><label>Mensaje</label><textarea placeholder="Escribe tu mensaje aquí..."></textarea></div>
+          <button class="btn btn-rosa btn-full">Enviar mensaje ✉️</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════════
+     FOOTER
+════════════════════════════════════════════════ -->
+<footer>
+  <div class="footer-grid">
+    <!-- Marca -->
+    <div class="footer-brand">
+      <div class="fb-logo">
+        <div class="footer-logo-circle">
+          <!-- LOGO FOOTER: reemplaza con <img src="assets/img/logo.png" alt="ConfíComputos"> -->
+          <img src="img/logo.jpeg" alt="ConfíComputos" class="footer-logo">
+        </div>
+        <h3>ConfíComputos</h3>
+      </div>
+      <p>Tu aliado en tecnología y papelería en Colombia. Calidad, honestidad y atención personalizada en cada compra.</p>
+      <div class="footer-social">
+        <a href="#" class="social-btn" title="Facebook">📘</a>
+        <a href="#" class="social-btn" title="Instagram">📸</a>
+        <a href="#" class="social-btn" title="WhatsApp">💬</a>
+        <a href="#" class="social-btn" title="TikTok">🎵</a>
+      </div>
+      <!-- Información legal / fiscal -->
+      <div class="footer-info-block" style="margin-top:16px">
+        <div class="fi-label">NIT / Razón social</div>
+        <div class="fi-val">ConfíComputos S.A.S. — NIT: XXX.XXX.XXX-X</div>
+      </div>
+      <div class="footer-info-block">
+        <div class="fi-label">Registro de Cámara de Comercio</div>
+        <div class="fi-val">Matrícula No. XXXXXXXXX</div>
+      </div>
+    </div>
+
+    <!-- Navegación -->
+    <div class="footer-col">
+      <h4>Navegación</h4>
+      <ul>
+        <li><a href="#inicio">Inicio</a></li>
+        <li><a href="#nosotros">Nosotros</a></li>
+        <li><a href="#servicios">Servicios</a></li>
+        <li><a href="#porque">¿Por qué nosotros?</a></li>
+        <li><a href="#contacto">Contacto</a></li>
+        <li><a href="app.html">Abrir aplicación</a></li>
+      </ul>
+    </div>
+
+    <!-- Productos -->
+    <div class="footer-col">
+      <h4>Productos</h4>
+      <ul>
+        <li><a href="app.html">Tecnología</a></li>
+        <li><a href="app.html">Papelería</a></li>
+        <li><a href="app.html">Accesorios</a></li>
+        <li><a href="app.html">Impresión</a></li>
+        <li><a href="app.html">Audio y Video</a></li>
+        <li><a href="app.html">Mobiliario</a></li>
+      </ul>
+    </div>
+
+    <!-- Información -->
+    <div class="footer-col">
+      <h4>Información</h4>
+      <ul>
+        <li><span>📍 Calle XX # XX-XX<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Ciudad Bogota, Bosa Santa Fe, Colombia</span></li>
+        <li><span>📞 +57 304 362 8606</span></li>
+        <li><span>✉️ papeleriaconficomputos@gmail.com</span></li>
+        <li><span>🕐 Lun–Vie 8am–8pm - Sáb 8am–3pm</span></li>
+        <li><a href="#">Política de privacidad</a></li>
+        <li><a href="#">Términos y condiciones</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <p>© <span id="current-year">2026</span> ConfíComputos — Todos los derechos reservados.</p>
+    <div class="fb-logo-mini">
+      <div class="footer-logo-mini"> <img src="img/logo.jpeg" alt="ConfíComputos" class="footer-logo"></div>
+      Hecho con 💖 en Colombia
+    </div>
+  </div>
+</footer>
+
+<!-- Toast container -->
+<div id="toast-container"></div>
+
+<script src="js/landing.js"></script>
+
+<!-- ══ CHATBOT CONFIBOT ══ -->
+<button id="chat-fab" title="Chatea con ConfíBot">
+  💬
+  <div class="chat-notif"></div>
+</button>
+<div id="chat-window">
+  <div class="chat-header">
+    <div class="ch-avatar">🤖</div>
+    <div>
+      <div class="ch-name">ConfíBot</div>
+      <div class="ch-status">● En línea · Responde al instante</div>
+    </div>
+    <button class="ch-close" id="chat-close" title="Cerrar">✕</button>
+  </div>
+  <div class="chat-body" id="chat-body"></div>
+  <div class="chat-footer">
+    <input id="chat-input" placeholder="Escribe tu pregunta..." autocomplete="off">
+    <button id="chat-send" title="Enviar">➤</button>
+  </div>
+</div>
+
+<script>
+/* ══ CONFIBOT ══ */
+(function(){
+  const RESP = {
+    saludo:    ['¡Hola! 👋 Soy **ConfíBot**, el asistente de ConfíComputos. ¿En qué te puedo ayudar hoy?','¡Bienvenido/a! 🌸 Estoy aquí para resolver tus dudas.'],
+    productos: ['Tenemos más de 20 productos en tecnología 💻 y papelería 📓. ¡Explora el catálogo en nuestra aplicación!','Manejamos laptops, tablets, accesorios, cuadernos, bolígrafos y más. ¿Te interesa alguna categoría?'],
+    precios:   ['Nuestros precios son muy competitivos 💰. Cuadernos desde $8.500, Laptops desde $2.850.000. ¡Visita el catálogo para ver todos!'],
+    pedido:    ['¡Hacer un pedido es fácil! 🛒 1) Entra a la app, 2) Agrega al carrito, 3) Elige método de pago, 4) Elige el tiempo de recogida. ¡Listo!'],
+    pago:      ['Aceptamos 💳 Tarjeta de crédito, 📱 Nequi y 💵 Efectivo. Elige el que prefieras al finalizar tu compra.'],
+    horario:   ['Atendemos Lunes a Sábado de 8:00 AM a 6:00 PM 🕐. ¡Te esperamos!'],
+    ubicacion: ['Estamos en nuestra tienda física 📍. Haz tu pedido en línea y recógelo en 10 a 20 minutos. ¡Sin esperas!'],
+    soporte:   ['Para soporte técnico 🔧 escríbenos por WhatsApp, llámanos o envía un correo. ¡Estamos listos para ayudarte!'],
+    registro:  ['¡Crear tu cuenta es gratis! 🎉 Haz clic en "Abrir aplicación" y luego en "Crear perfil". Solo necesitas nombre, correo y contraseña.'],
+    gracias:   ['¡Con gusto! 🌸 Si tienes más preguntas, aquí estaré.','¡Fue un placer ayudarte! 💖 Recuerda que en ConfíComputos siempre tenemos algo para ti.'],
+    default:   ['Entiendo tu consulta 😊. Para una respuesta más detallada, puedes escribirnos directamente o visitar la sección de contacto.','Mmm, no estoy seguro/a de esa. Te recomiendo contactarnos por WhatsApp. 🌸']
+  };
+  const OPTS = [
+    {l:'📦 Productos disponibles',k:'productos'},{l:'💰 Precios',k:'precios'},
+    {l:'🛒 Cómo hacer un pedido',k:'pedido'},{l:'💳 Métodos de pago',k:'pago'},
+    {l:'🕐 Horario',k:'horario'},{l:'📍 Dónde estamos',k:'ubicacion'},
+  ];
+
+  function detectar(msg){
+    const m=msg.toLowerCase();
+    if(/hola|buenos|buenas|hey|saludos/.test(m))return 'saludo';
+    if(/producto|catalogo|catálogo|venden|tienen/.test(m))return 'productos';
+    if(/precio|costo|valor|cuánto|cuanto/.test(m))return 'precios';
+    if(/pedido|compra|carrito|pedir|orden/.test(m))return 'pedido';
+    if(/pago|pagar|tarjeta|nequi|efectivo/.test(m))return 'pago';
+    if(/horario|hora|abierto|atencion|atención/.test(m))return 'horario';
+    if(/ubicacion|ubicación|dirección|donde|local/.test(m))return 'ubicacion';
+    if(/soporte|técnico|tecnico|ayuda|problema/.test(m))return 'soporte';
+    if(/registro|cuenta|registr|crear/.test(m))return 'registro';
+    if(/gracias|perfecto|listo|genial|excelente/.test(m))return 'gracias';
+    return 'default';
+  }
+
+  function getRespuesta(k){
+    const arr=RESP[k]||RESP.default;
+    return arr[Math.floor(Math.random()*arr.length)];
+  }
+
+  let msgId=0;
+  function addMsg(texto,tipo,showOpts){
+    const body=document.getElementById('chat-body');
+    if(!body)return;
+    const now=new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});
+    const el=document.createElement('div');
+    el.className='chat-msg '+tipo;
+    el.innerHTML=texto.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>') + '<div class="msg-time">'+now+'</div>';
+    body.appendChild(el);
+    if(showOpts&&tipo==='bot'){
+      const wrap=document.createElement('div');
+      wrap.className='chat-options';
+      OPTS.forEach(op=>{
+        const btn=document.createElement('button');
+        btn.className='chat-opt-btn';
+        btn.textContent=op.l;
+        btn.onclick=()=>{wrap.remove();enviar(op.l,op.k);};
+        wrap.appendChild(btn);
+      });
+      body.appendChild(wrap);
+    }
+    body.scrollTop=body.scrollHeight;
+  }
+
+  function mostrarTyping(){
+    const body=document.getElementById('chat-body');
+    if(!body)return;
+    const el=document.createElement('div');
+    el.id='typing-ind';el.className='chat-typing';
+    el.innerHTML='<span></span><span></span><span></span>';
+    body.appendChild(el);body.scrollTop=body.scrollHeight;
+  }
+  function ocultarTyping(){document.getElementById('typing-ind')?.remove();}
+
+  function enviar(texto,forzarKey){
+    if(!texto.trim())return;
+    addMsg(texto,'user');
+    const inp=document.getElementById('chat-input');
+    if(inp)inp.value='';
+    mostrarTyping();
+    setTimeout(()=>{
+      ocultarTyping();
+      const k=forzarKey||detectar(texto);
+      addMsg(getRespuesta(k),'bot',false);
+    },700+Math.random()*600);
+  }
+
+  let isOpen=false;
+  function toggle(){
+    isOpen=!isOpen;
+    const win=document.getElementById('chat-window');
+    win.classList.toggle('open',isOpen);
+    if(isOpen&&document.getElementById('chat-body').children.length===0){
+      setTimeout(()=>addMsg('¡Hola! 👋 Soy **ConfíBot**, asistente virtual de **ConfíComputos**. ¿En qué te puedo ayudar?','bot',true),300);
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded',()=>{
+    document.getElementById('chat-fab')?.addEventListener('click',toggle);
+    document.getElementById('chat-close')?.addEventListener('click',toggle);
+    document.getElementById('chat-send')?.addEventListener('click',()=>enviar(document.getElementById('chat-input')?.value||''));
+    document.getElementById('chat-input')?.addEventListener('keydown',e=>{if(e.key==='Enter')enviar(e.target.value);});
+  });
+})();
+</script>
+
+</body>
+</html>

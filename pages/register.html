@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ConfíComputos — Crear cuenta</title>
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/app.css">
+</head>
+<body>
+
+<!-- SUCCESS OVERLAY -->
+<div class="success-overlay" id="success-overlay">
+  <div class="confetti-container" id="confetti-container"></div>
+  <div class="success-circle">✓</div>
+  <h2 class="success-title">¡Perfil creado exitosamente!</h2>
+  <p class="success-sub">Bienvenido/a a ConfíComputos,</p>
+  <p class="success-name" id="success-username"></p>
+  <div class="success-card">
+    <div class="sc-row"><span class="sc-label">Correo</span><span class="sc-val" id="sc-email"></span></div>
+    <div class="sc-row"><span class="sc-label">Tipo de cuenta</span><span class="sc-val" id="sc-rol"></span></div>
+    <div class="sc-row"><span class="sc-label">Ciudad</span><span class="sc-val" id="sc-ciudad"></span></div>
+    <div class="sc-row"><span class="sc-label">Teléfono</span><span class="sc-val" id="sc-tel"></span></div>
+    <div class="sc-row"><span class="sc-label">Miembro desde</span><span class="sc-val" id="sc-fecha"></span></div>
+  </div>
+  <button class="btn btn-rosa btn-lg" id="btn-go-login">Iniciar sesión ahora →</button>
+</div>
+
+<!-- ADMIN CODE OVERLAY -->
+<div class="admin-code-overlay" id="admin-code-overlay">
+  <div class="admin-code-modal">
+    <div class="acm-lock">🔐</div>
+    <h3 class="acm-title">Acceso de Administrador</h3>
+    <p class="acm-sub">Para crear una cuenta de administrador necesitas el <strong>código de autorización</strong>. Contáctate con el equipo de ConfíComputos.</p>
+    <div class="code-digits" id="code-digits-wrap">
+      <input class="code-digit" id="cd0" maxlength="1">
+      <input class="code-digit" id="cd1" maxlength="1">
+      <input class="code-digit" id="cd2" maxlength="1">
+      <input class="code-digit" id="cd3" maxlength="1">
+      <input class="code-digit" id="cd4" maxlength="1">
+      <input class="code-digit" id="cd5" maxlength="1">
+      <input class="code-digit" id="cd6" maxlength="1">
+      <input class="code-digit" id="cd7" maxlength="1">
+    </div>
+    <p class="code-hint">🔑 Código de 8 caracteres — Ejemplo: ADMIN2026</p>
+    <div class="code-error-msg" id="code-error-msg">Código incorrecto. Verifica e intenta de nuevo.</div>
+    <div class="code-actions">
+      <button class="btn btn-outline" id="btn-cancel-code">Cancelar</button>
+      <button class="btn btn-rosa" id="btn-verify-code">Verificar código</button>
+    </div>
+    <p class="code-switch">¿Eres usuario? <button class="link-btn" id="btn-switch-user">Crear como usuario regular</button></p>
+  </div>
+</div>
+
+<!-- REGISTER FORM -->
+<div class="auth-page">
+  <div class="auth-card register-card">
+    <div class="auth-logo">
+      <div class="logo-circle">
+        <img src="img/logo.jpeg" alt="confisoftw">
+      </div>
+      <h1>Confisoftw</h1>
+      <p>Crea tu cuenta en segundos</p>
+    </div>
+
+    <!-- Steps -->
+    <div class="steps-bar">
+      <div class="step-wrap">
+        <div class="step-dot active" id="sdot1">1</div>
+        <div class="step-label">Datos</div>
+      </div>
+      <div class="step-line" id="sline1"></div>
+      <div class="step-wrap">
+        <div class="step-dot" id="sdot2">2</div>
+        <div class="step-label">Contacto</div>
+      </div>
+      <div class="step-line" id="sline2"></div>
+      <div class="step-wrap">
+        <div class="step-dot" id="sdot3">3</div>
+        <div class="step-label">Seguridad</div>
+      </div>
+    </div>
+
+    <!-- PASO 1 -->
+    <div id="step-content-1">
+      <div class="form-row">
+        <div class="form-group"><label>Nombre</label><input id="reg-nombre" placeholder="Tu nombre"></div>
+        <div class="form-group"><label>Apellido</label><input id="reg-apellido" placeholder="Tu apellido"></div>
+      </div>
+      <div class="form-group"><label>Correo electrónico</label><input type="email" id="reg-email" placeholder="correo@ejemplo.com"></div>
+      <div class="form-group">
+        <label>Tipo de cuenta</label>
+        <select id="reg-rol">
+    <option value="cliente">🛒 Cliente</option>
+    <option value="usuario">👤 Usuario</option>
+    <option value="administrador">🛡️ Administrador</option>
+</select>
+      </div>
+      <div class="form-error" id="reg-err1"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px">
+        <a href="../app.html" class="link-btn">← Volver al login</a>
+        <button class="btn btn-rosa" id="btn-next1">Continuar →</button>
+      </div>
+    </div>
+
+    <!-- PASO 2 -->
+    <div id="step-content-2" style="display:none">
+      <div class="form-group"><label>Teléfono</label><input id="reg-tel" placeholder="300 000 0000"></div>
+      <div class="form-row">
+        <div class="form-group"><label>Ciudad</label><input id="reg-ciudad" placeholder="Bogotá"></div>
+        <div class="form-group"><label>Departamento</label><input id="reg-depto" placeholder="Cundinamarca"></div>
+      </div>
+      <div class="form-group"><label>Fecha de nacimiento</label><input type="date" id="reg-fecha"></div>
+      <div class="form-error" id="reg-err2"></div>
+      <div style="display:flex;gap:12px;margin-top:16px">
+        <button class="btn btn-outline" style="flex:1" id="btn-back2">← Atrás</button>
+        <button class="btn btn-rosa"   style="flex:2" id="btn-next2">Continuar →</button>
+      </div>
+    </div>
+
+    <!-- PASO 3 -->
+    <div id="step-content-3" style="display:none">
+      <div class="form-group">
+        <label>Contraseña</label>
+        <input type="password" id="reg-pass" placeholder="Mínimo 6 caracteres">
+        <div class="pass-bar-wrap"><div class="pass-bar-fill" id="pass-bar" style="width:0;background:var(--gris-200)"></div></div>
+        <div class="pass-label-txt" id="pass-label"></div>
+      </div>
+      <div class="form-group">
+        <label>Confirmar contraseña</label>
+        <input type="password" id="reg-pass2" placeholder="Repite tu contraseña">
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:16px">
+        <input type="checkbox" id="reg-terms" style="width:16px;height:16px;margin-top:3px;accent-color:var(--rosa-600);flex-shrink:0">
+        <label for="reg-terms" style="font-size:13px;color:var(--gris-700);cursor:pointer;line-height:1.5">
+          Acepto los <span style="color:var(--rosa-600);font-weight:600">términos y condiciones</span> y la política de privacidad de ConfíComputos
+        </label>
+      </div>
+      <div class="form-error" id="reg-err3"></div>
+      <div style="display:flex;gap:12px;margin-top:4px">
+        <button class="btn btn-outline" style="flex:1" id="btn-back3">← Atrás</button>
+        <button class="btn btn-rosa"   style="flex:2" id="btn-register">🎉 Crear perfil</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script src="../js/models.js"></script>
+<script src="../js/database.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/app.js"></script>
+</body>
+</html>

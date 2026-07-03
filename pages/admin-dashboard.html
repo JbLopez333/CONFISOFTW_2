@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ConfíComputos — Administrador</title>
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/app.css">
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <button class="tb-icon-btn" id="btn-menu-toggle" style="display:none" aria-label="Menú">☰</button>
+    <div class="topbar-brand">
+      <div class="tb-logo">
+        <img src="img/logo.jpeg" alt="Confisoftw">
+      </div>
+      <span class="tb-name">Confisoftw</span>
+    </div>
+    <div class="topbar-spacer"></div>
+    <div class="tb-actions">
+      <button class="tb-icon-btn" onclick="AdminApp.renderSection('pedidos-live')" title="Notificaciones">
+        🔔
+        <span class="tb-badge" id="notif-badge" style="display:none">0</span>
+      </button>
+      <div class="tb-user">
+        <div class="avatar" id="tb-avatar">A</div>
+        <span id="tb-user-name">Administrador</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="layout">
+
+    <!-- SIDEBAR -->
+    <nav class="sidebar" id="sidebar">
+      <button class="nav-item" data-section="productos">
+        <span class="nav-icon">📦</span><span>Productos</span>
+      </button>
+      <button class="nav-item" data-section="inventario">
+        <span class="nav-icon">📊</span><span>Inventario</span>
+      </button>
+      <button class="nav-item" data-section="historial-inv">
+        <span class="nav-icon">📈</span><span>Historial Inventario</span>
+      </button>
+      <button class="nav-item" data-section="pedidos-admin">
+        <span class="nav-icon">🧾</span><span>Pedidos Clientes</span>
+      </button>
+      <button class="nav-item" data-section="pedidos-live">
+        <span class="nav-icon">🔔</span><span>Pedidos en Tiempo Real</span>
+      </button>
+      <button class="nav-item" data-section="usuarios">
+        <span class="nav-icon">👥</span><span>Usuarios</span>
+      </button>
+      <button class="nav-item" data-section="perfil">
+        <span class="nav-icon">👤</span><span>Mi Perfil</span>
+      </button>
+      <div class="nav-sep"></div>
+      <button class="nav-item nav-logout" id="btn-logout">
+        <span class="nav-icon">🚪</span><span>Cerrar sesión</span>
+      </button>
+    </nav>
+
+    <!-- CONTENT -->
+    <main class="content" id="main-content">
+      <div style="display:flex;align-items:center;justify-content:center;height:200px;color:var(--gris-400)">
+        Cargando...
+      </div>
+    </main>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script src="../js/models.js"></script>
+<script src="../js/database.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/admin.js"></script>
+
+<script>
+// Hacer visible el botón hamburger en móvil
+if (window.innerWidth <= 900) {
+  document.getElementById('btn-menu-toggle').style.display = 'flex';
+}
+window.addEventListener('resize', () => {
+  document.getElementById('btn-menu-toggle').style.display =
+    window.innerWidth <= 900 ? 'flex' : 'none';
+});
+</script>
+</body>
+</html>

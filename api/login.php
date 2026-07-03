@@ -1,0 +1,76 @@
+<?php
+header("Content-Type: application/json");
+require_once "conexion.php";
+
+if ($_SERVER["REQUEST_METHOD"] != "POST") {
+    echo json_encode([
+        "success" => false,
+        "mensaje" => "Método no permitido"
+    ]);
+    exit;
+}
+
+$correo = $_POST["correo"] ?? "";
+$password = $_POST["password"] ?? "";
+$rol = $_POST["rol"] ?? "";
+
+$sql = "SELECT
+            usuarios.id,
+            usuarios.nombre,
+            usuarios.apellido,
+            usuarios.correo,
+            usuarios.telefono,
+            usuarios.estado,
+            roles.nombre AS rol,
+            usuarios.password
+        FROM usuarios
+        INNER JOIN roles
+            ON usuarios.rol_id = roles.id
+        WHERE usuarios.correo = ?";
+
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("s",$correo);
+$stmt->execute();
+
+$result = $stmt->get_result();
+
+if($result->num_rows==0){
+    echo json_encode([
+        "success"=>false,
+        "mensaje"=>"Usuario no encontrado"
+    ]);
+    exit;
+}
+
+$user = $result->fetch_assoc();
+
+if (!password_verify($password, $user["password"])) {
+    echo json_encode([
+        "success"=>false,
+        "mensaje"=>"Contraseña incorrecta"
+    ]);
+    exit;
+}
+
+if(strtolower($user["rol"]) != strtolower($rol)){
+    echo json_encode([
+        "success"=>false,
+        "mensaje"=>"Rol incorrecto"
+    ]);
+    exit;
+}
+
+if($user["estado"]==0){
+    echo json_encode([
+        "success"=>false,
+        "mensaje"=>"Usuario inactivo"
+    ]);
+    exit;
+}
+
+unset($user["password"]);
+
+echo json_encode([
+    "success"=>true,
+    "usuario"=>$user
+]);
