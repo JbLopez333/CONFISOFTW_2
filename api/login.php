@@ -65,6 +65,11 @@ if ((int)$user["estado"] === 0) {
     exit;
 }
 
+// Registrar la fecha del último inicio de sesión exitoso (para la
+// limpieza automática de cuentas inactivas)
+$upd = $conn->prepare("UPDATE usuarios SET ultimo_login = now() WHERE id = ?");
+$upd->execute([$user["id"]]);
+
 unset($user["password"]);
 
 echo json_encode([

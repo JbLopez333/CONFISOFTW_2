@@ -26,38 +26,12 @@
   <button class="btn btn-rosa btn-lg" id="btn-go-login">Iniciar sesión ahora →</button>
 </div>
 
-<!-- ADMIN CODE OVERLAY -->
-<div class="admin-code-overlay" id="admin-code-overlay">
-  <div class="admin-code-modal">
-    <div class="acm-lock">🔐</div>
-    <h3 class="acm-title">Acceso de Administrador</h3>
-    <p class="acm-sub">Para crear una cuenta de administrador necesitas el <strong>código de autorización</strong>. Contáctate con el equipo de ConfíComputos.</p>
-    <div class="code-digits" id="code-digits-wrap">
-      <input class="code-digit" id="cd0" maxlength="1">
-      <input class="code-digit" id="cd1" maxlength="1">
-      <input class="code-digit" id="cd2" maxlength="1">
-      <input class="code-digit" id="cd3" maxlength="1">
-      <input class="code-digit" id="cd4" maxlength="1">
-      <input class="code-digit" id="cd5" maxlength="1">
-      <input class="code-digit" id="cd6" maxlength="1">
-      <input class="code-digit" id="cd7" maxlength="1">
-    </div>
-    <p class="code-hint">🔑 Código de 8 caracteres — Ejemplo: ADMIN2026</p>
-    <div class="code-error-msg" id="code-error-msg">Código incorrecto. Verifica e intenta de nuevo.</div>
-    <div class="code-actions">
-      <button class="btn btn-outline" id="btn-cancel-code">Cancelar</button>
-      <button class="btn btn-rosa" id="btn-verify-code">Verificar código</button>
-    </div>
-    <p class="code-switch">¿Eres usuario? <button class="link-btn" id="btn-switch-user">Crear como usuario regular</button></p>
-  </div>
-</div>
-
 <!-- REGISTER FORM -->
 <div class="auth-page">
   <div class="auth-card register-card">
     <div class="auth-logo">
       <div class="logo-circle">
-        <img src="img/logo.jpeg" alt="confisoftw">
+        <img src="../img/logo.jpeg" alt="confisoftw">
       </div>
       <h1>Confisoftw</h1>
       <p>Crea tu cuenta en segundos</p>
@@ -92,8 +66,7 @@
         <label>Tipo de cuenta</label>
         <select id="reg-rol">
     <option value="cliente">🛒 Cliente</option>
-    <option value="usuario">👤 Usuario</option>
-    <option value="administrador">🛡️ Administrador</option>
+
 </select>
       </div>
       <div class="form-error" id="reg-err1"></div>

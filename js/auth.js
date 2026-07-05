@@ -9,7 +9,6 @@
    AUTH SERVICE
    ============================================================ */
 const AuthService = (() => {
-  const ADMIN_CODE    = 'ADMIN202';
   const SESSION_KEY   = 'cc_session';
 
   /** Inicia sesión. Devuelve el Usuario o null. */
@@ -85,12 +84,6 @@ const AuthService = (() => {
 
 }
 
-  /** Verifica el código de administrador */
-  function verificarCodigoAdmin(code) {
-    return code.trim().toUpperCase() === ADMIN_CODE;
-  }
-
-
   /** Solicita recuperación — simula envío de email/SMS */
 async function solicitarRecuperacion(email, metodo){
 
@@ -153,7 +146,7 @@ async function solicitarRecuperacion(email, metodo){
     return u;
   }
 
-  return { login, logout, getUsuarioActual, register, verificarCodigoAdmin, actualizarPerfil, requerirSesion, requerirAdmin, solicitarRecuperacion, verificarToken, cambiarPassword, ADMIN_CODE };
+  return { login, logout, getUsuarioActual, register, actualizarPerfil, requerirSesion, requerirAdmin, solicitarRecuperacion, verificarToken, cambiarPassword };
 })();
 
 

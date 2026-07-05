@@ -345,13 +345,27 @@ const AdminApp = (() => {
   /* ══════════════════════════════════════════════════════════
      SECCIÓN: USUARIOS
      ══════════════════════════════════════════════════════════ */
-  function renderUsuarios(c) {
+  let usuariosCache = [];
+  let rolesCache = [];
+
+  async function cargarRoles() {
+    if (rolesCache.length) return rolesCache;
+    try {
+      const resp = await fetch('../api/roles.php');
+      rolesCache = await resp.json();
+    } catch (e) {
+      rolesCache = [];
+    }
+    return rolesCache;
+  }
+
+  async function renderUsuarios(c) {
     c.innerHTML = `
       <h2 class="page-title">Historial de Usuarios</h2>
       <p class="page-sub">Gestión y estado de todos los usuarios registrados.</p>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Usuario</th><th>Correo</th><th>Rol</th><th>Ciudad</th><th>Tel.</th><th>Registrado</th><th>Estado</th><th>Acciones</th></tr></thead>
+          <thead><tr><th>Usuario</th><th>Correo</th><th>Rol</th><th>Tel.</th><th>Registrado</th><th>Últ. inicio de sesión</th><th>Estado</th><th>Acciones</th></tr></thead>
           <tbody id="tbody-users"></tbody>
         </table>
       </div>
@@ -359,90 +373,139 @@ const AdminApp = (() => {
       <div class="modal-overlay" id="modal-edit-user">
         <div class="modal-box" style="max-width:480px">
           <h3 class="modal-title">✏️ Editar Usuario</h3>
-          <div class="form-group"><label>Nombre completo</label><input id="eu-nombre" class="w-full"></div>
+          <div class="form-row">
+            <div class="form-group"><label>Nombre</label><input id="eu-nombre" class="w-full"></div>
+            <div class="form-group"><label>Apellido</label><input id="eu-apellido" class="w-full"></div>
+          </div>
           <div class="form-group"><label>Correo electrónico</label><input id="eu-email" type="email"></div>
           <div class="form-group"><label>Teléfono</label><input id="eu-tel"></div>
-          <div class="form-row">
-            <div class="form-group"><label>Ciudad</label><input id="eu-ciudad"></div>
-            <div class="form-group"><label>Departamento</label><input id="eu-depto"></div>
-          </div>
           <div class="form-group">
             <label>Rol</label>
-            <select id="eu-rol">
-              <option value="usuario">👤 Usuario / Cliente</option>
-              <option value="admin">🛡️ Administrador</option>
-            </select>
+            <select id="eu-rol"></select>
           </div>
-          <div class="form-group"><label>Nueva contraseña (dejar vacío para no cambiar)</label><input id="eu-pass" type="password" placeholder="••••••••"></div>
+          <p style="font-size:12px;color:var(--gris-500);margin-top:4px">
+            🔒 Solo un Administrador puede asignar el rol Administrador — el servidor también valida esto, aunque alguien intente saltarse esta pantalla.
+          </p>
           <div class="modal-footer">
             <button class="btn btn-outline" onclick="document.getElementById('modal-edit-user').classList.remove('open')">Cancelar</button>
             <button class="btn btn-rosa" id="btn-save-user">💾 Guardar cambios</button>
           </div>
         </div>
       </div>`;
+
+    const roles = await cargarRoles();
+    const select = document.getElementById('eu-rol');
+    if (select) {
+      select.innerHTML = roles.map(r => `<option value="${r.id}">${r.nombre}</option>`).join('');
+    }
+
     refreshTablaUsuarios();
   }
 
-  function refreshTablaUsuarios() {
+  async function refreshTablaUsuarios() {
     const tbody = document.getElementById('tbody-users');
     if (!tbody) return;
-    tbody.innerHTML = db.getUsuarios().map(u => `
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:24px">Cargando usuarios…</td></tr>`;
+
+    try {
+      const resp = await fetch('../api/usuarios.php');
+      usuariosCache = await resp.json();
+    } catch (e) {
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:24px">No se pudo cargar la lista de usuarios.</td></tr>`;
+      return;
+    }
+
+    if (!Array.isArray(usuariosCache) || usuariosCache.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:24px">Aún no hay usuarios registrados.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = usuariosCache.map(u => {
+      const activo = Number(u.estado) === 1;
+      const inicial = (u.nombre || '?').charAt(0).toUpperCase();
+      const registrado = u.fecha_registro ? new Date(u.fecha_registro).toLocaleDateString('es-CO') : '—';
+      const ultimoLogin = u.ultimo_login ? new Date(u.ultimo_login).toLocaleDateString('es-CO') : 'Nunca';
+      return `
       <tr>
-        <td><div style="display:flex;align-items:center;gap:8px">${UI.avatar(u.iniciales, 30)}<strong>${u.nombre}</strong></div></td>
-        <td style="font-size:13px">${u.email}</td>
-        <td><span class="badge badge-purple">${u.rolLabel}</span></td>
-        <td>${u.ciudad||'—'}</td>
-        <td style="font-size:13px">${u.telefono||'—'}</td>
-        <td>${u.registrado}</td>
-        <td><span class="badge ${u.activo?'badge-active':'badge-inactive'}">${u.activo?'Activo':'Inactivo'}</span></td>
+        <td><div style="display:flex;align-items:center;gap:8px">${UI.avatar(inicial, 30)}<strong>${u.nombre} ${u.apellido}</strong></div></td>
+        <td style="font-size:13px">${u.correo}</td>
+        <td><span class="badge badge-purple">${u.rol}</span></td>
+        <td style="font-size:13px">${u.telefono || '—'}</td>
+        <td>${registrado}</td>
+        <td style="font-size:13px">${ultimoLogin}</td>
+        <td><span class="badge ${activo ? 'badge-active' : 'badge-inactive'}">${activo ? 'Activo' : 'Inactivo'}</span></td>
         <td>
           <div style="display:flex;gap:6px;flex-wrap:wrap">
             <button class="btn btn-sm" style="background:var(--rosa-100);color:var(--rosa-700);border:1.5px solid var(--rosa-300)" onclick="AdminApp.editarUsuario(${u.id})">✏️ Editar</button>
-            <button class="btn btn-sm btn-outline" onclick="AdminApp.toggleUsuario(${u.id})">${u.activo?'Desactivar':'Activar'}</button>
+            <button class="btn btn-sm btn-outline" onclick="AdminApp.toggleUsuario(${u.id})">${activo ? 'Desactivar' : 'Activar'}</button>
           </div>
         </td>
-      </tr>`).join('');
+      </tr>`;
+    }).join('');
   }
 
-  function toggleUsuario(id) {
-    const users = db.getUsuarios();
-    const u = users.find(x => x.id === id);
+  async function guardarUsuarioApi(payload) {
+    try {
+      const resp = await fetch('../api/usuarios.php', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...payload, admin_id: currentUser.id })
+      });
+      const json = await resp.json();
+      return json;
+    } catch (e) {
+      return { success: false };
+    }
+  }
+
+  async function toggleUsuario(id) {
+    const u = usuariosCache.find(x => Number(x.id) === Number(id));
     if (!u) return;
-    u.toggleActivo();
-    db.actualizarUsuario(u);
-    UI.toast(u.activo ? '✅ Usuario activado' : '❌ Usuario desactivado');
-    refreshTablaUsuarios();
+    const nuevoEstado = Number(u.estado) === 1 ? 0 : 1;
+    const resultado = await guardarUsuarioApi({ ...u, estado: nuevoEstado });
+    if (resultado.success) {
+      UI.toast(nuevoEstado === 1 ? '✅ Usuario activado' : '❌ Usuario desactivado');
+      refreshTablaUsuarios();
+    } else {
+      UI.toast('⚠️ ' + (resultado.mensaje || 'No se pudo actualizar el usuario'));
+    }
   }
 
   function editarUsuario(id) {
-    const u = db.getUsuarios().find(x => x.id === id);
+    const u = usuariosCache.find(x => Number(x.id) === Number(id));
     if (!u) return;
-    document.getElementById('eu-nombre').value = u.nombre || '';
-    document.getElementById('eu-email').value  = u.email  || '';
-    document.getElementById('eu-tel').value    = u.telefono || '';
-    document.getElementById('eu-ciudad').value = u.ciudad  || '';
-    document.getElementById('eu-depto').value  = u.depto   || '';
-    document.getElementById('eu-rol').value    = u.rol     || 'usuario';
-    document.getElementById('eu-pass').value   = '';
+    document.getElementById('eu-nombre').value   = u.nombre || '';
+    document.getElementById('eu-apellido').value = u.apellido || '';
+    document.getElementById('eu-email').value    = u.correo || '';
+    document.getElementById('eu-tel').value      = u.telefono || '';
+    const select = document.getElementById('eu-rol');
+    if (select) select.value = String(u.rol_id);
     document.getElementById('btn-save-user').onclick = () => guardarEdicionUsuario(id);
     document.getElementById('modal-edit-user').classList.add('open');
   }
 
-  function guardarEdicionUsuario(id) {
-    const u = db.getUsuarios().find(x => x.id === id);
+  async function guardarEdicionUsuario(id) {
+    const u = usuariosCache.find(x => Number(x.id) === Number(id));
     if (!u) return;
-    u.nombre   = document.getElementById('eu-nombre').value.trim() || u.nombre;
-    u.email    = document.getElementById('eu-email').value.trim()  || u.email;
-    u.telefono = document.getElementById('eu-tel').value.trim();
-    u.ciudad   = document.getElementById('eu-ciudad').value.trim();
-    u.depto    = document.getElementById('eu-depto').value.trim();
-    u.rol      = document.getElementById('eu-rol').value;
-    const np   = document.getElementById('eu-pass').value;
-    if (np.length >= 6) u.pass = np;
-    db.actualizarUsuario(u);
+
+    const payload = {
+      ...u,
+      nombre:   document.getElementById('eu-nombre').value.trim()   || u.nombre,
+      apellido: document.getElementById('eu-apellido').value.trim() || u.apellido,
+      correo:   document.getElementById('eu-email').value.trim()    || u.correo,
+      telefono: document.getElementById('eu-tel').value.trim(),
+      rol_id:   Number(document.getElementById('eu-rol').value)
+    };
+
+    const resultado = await guardarUsuarioApi(payload);
     document.getElementById('modal-edit-user').classList.remove('open');
-    UI.toast('✅ Usuario actualizado correctamente');
-    refreshTablaUsuarios();
+
+    if (resultado.success) {
+      UI.toast('✅ Usuario actualizado correctamente');
+      refreshTablaUsuarios();
+    } else {
+      UI.toast('🚫 ' + (resultado.mensaje || 'No se pudo actualizar el usuario'));
+    }
   }
 
   /* ══════════════════════════════════════════════════════════

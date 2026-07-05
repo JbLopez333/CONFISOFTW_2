@@ -15,11 +15,15 @@ $apellido  = trim($_POST["apellido"] ?? "");
 $correo    = trim($_POST["correo"] ?? "");
 $password  = trim($_POST["password"] ?? "");
 $telefono  = trim($_POST["telefono"] ?? "");
-$rol       = trim($_POST["rol"] ?? "");
 $documento = trim($_POST["documento"] ?? "");
 
+// SEGURIDAD: el registro público SIEMPRE crea usuarios con rol "Cliente".
+// El valor de rol que venga del formulario se ignora por completo:
+// nadie puede auto-asignarse Administrador o Empleado desde este endpoint.
+$rol = "Cliente";
+
 // Validaciones
-if ($nombre == "" || $apellido == "" || $correo == "" || $password == "" || $rol == "") {
+if ($nombre == "" || $apellido == "" || $correo == "" || $password == "") {
     echo json_encode([
         "success" => false,
         "mensaje" => "Todos los campos obligatorios deben completarse."

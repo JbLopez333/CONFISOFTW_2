@@ -177,7 +177,6 @@ async function guardarNuevaPass() {
 const RegisterController = (() => {
   let currentStep = 1;
   let regData = {};
-  let adminCodeDigits = new Array(8).fill('');
 
   function init() {
     updateSteps();
@@ -187,25 +186,9 @@ const RegisterController = (() => {
     document.getElementById('btn-back3')?.addEventListener('click', () => goStep(2));
     document.getElementById('btn-register')?.addEventListener('click', tryRegister);
     document.getElementById('reg-pass')?.addEventListener('input', checkPassStrength);
-    document.getElementById('btn-verify-code')?.addEventListener('click', verifyAdminCode);
-    document.getElementById('btn-cancel-code')?.addEventListener('click', () => {
-      document.getElementById('admin-code-overlay').classList.remove('open');
-    });
-    document.getElementById('btn-switch-user')?.addEventListener('click', () => {
-      regData.rol = 'usuario';
-      document.getElementById('admin-code-overlay').classList.remove('open');
-      doRegister();
-    });
     document.getElementById('btn-go-login')?.addEventListener('click', () => {
       window.location.href = '../app.html';
     });
-    // Setup code digits
-    for (let i = 0; i < 8; i++) {
-      const el = document.getElementById('cd' + i);
-      if (!el) continue;
-      el.addEventListener('input', () => onDigit(i, el));
-      el.addEventListener('keydown', e => onDigitKey(i, e));
-    }
   }
 
   function nextStep(n) {
@@ -217,8 +200,6 @@ const RegisterController = (() => {
       const email    = document.getElementById('reg-email').value.trim();
       if (!nombre || !apellido) { showErr(n, 'Ingresa nombre y apellido.'); return; }
       if (!email.includes('@')) { showErr(n, 'Ingresa un correo válido.'); return; }
-      const existe = db.getUsuarios().find(u => u.email === email);
-      if (existe) { showErr(n, 'Este correo ya está registrado.'); return; }
       regData.nombre   = nombre + ' ' + apellido;
       regData.email    = email;
       regData.rol      = document.getElementById('reg-rol').value;
@@ -283,51 +264,7 @@ const RegisterController = (() => {
     if (pass !== pass2)  { showErr(3, 'Las contraseñas no coinciden.'); return; }
     if (!terms)          { showErr(3, 'Acepta los términos y condiciones.'); return; }
     regData.pass = pass;
-    if (regData.rol === 'admin') {
-      adminCodeDigits = new Array(8).fill('');
-      for (let i = 0; i < 8; i++) { const el=document.getElementById('cd'+i); if(el){el.value='';el.classList.remove('filled');} }
-      document.getElementById('code-error-msg').classList.remove('show');
-      document.getElementById('admin-code-overlay').classList.add('open');
-      setTimeout(() => document.getElementById('cd0')?.focus(), 100);
-    } else {
-      doRegister();
-    }
-  }
-
-  function onDigit(i, el) {
-    const val = el.value.toUpperCase().replace(/[^A-Z0-9]/g, '').charAt(0);
-    el.value = val;
-    adminCodeDigits[i] = val;
-    el.classList.toggle('filled', !!val);
-    document.getElementById('code-error-msg').classList.remove('show');
-    if (val && i < 7) document.getElementById('cd' + (i + 1))?.focus();
-  }
-
-  function onDigitKey(i, e) {
-    if (e.key === 'Backspace' && !adminCodeDigits[i] && i > 0) {
-      adminCodeDigits[i-1] = '';
-      const prev = document.getElementById('cd' + (i-1));
-      if (prev) { prev.value = ''; prev.classList.remove('filled'); prev.focus(); }
-    }
-    if (e.key === 'Enter') verifyAdminCode();
-  }
-
-  function verifyAdminCode() {
-    const code = adminCodeDigits.join('');
-    if (AuthService.verificarCodigoAdmin(code)) {
-      document.getElementById('admin-code-overlay').classList.remove('open');
-      doRegister();
-    } else {
-      document.getElementById('code-error-msg').classList.add('show');
-      const wrap = document.getElementById('code-digits-wrap');
-      wrap.classList.add('shake');
-      setTimeout(() => {
-        wrap.classList.remove('shake');
-        adminCodeDigits = new Array(8).fill('');
-        for (let i = 0; i < 8; i++) { const el=document.getElementById('cd'+i); if(el){el.value='';el.classList.remove('filled');} }
-        document.getElementById('cd0')?.focus();
-      }, 500);
-    }
+    doRegister();
   }
 
   async function doRegister(){
