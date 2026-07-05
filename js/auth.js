@@ -149,7 +149,7 @@ async function solicitarRecuperacion(email, metodo){
   /** Verifica que el usuario sea admin */
   function requerirAdmin() {
     const u = requerirSesion();
-    if (u && u.rol !== 'admin') { window.location.href = 'user-dashboard.html'; return null; }
+    if (u && String(u.rol).toLowerCase() !== 'administrador') { window.location.href = 'user-dashboard.html'; return null; }
     return u;
   }
 

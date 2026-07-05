@@ -79,7 +79,7 @@ async function doLogin() {
 
         if(resultado.success){
 
-            localStorage.setItem("usuario",JSON.stringify(resultado.usuario));
+            sessionStorage.setItem("cc_session",JSON.stringify(resultado.usuario));
 
             if(resultado.usuario.rol==="Administrador"){
 
