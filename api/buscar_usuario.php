@@ -5,37 +5,33 @@ require_once "conexion.php";
 
 $correo = $_POST["correo"] ?? "";
 
-if(empty($correo)){
+if (empty($correo)) {
     echo json_encode([
-        "success"=>false
+        "success" => false
     ]);
     exit;
 }
 
-$sql="SELECT id,nombre,correo,telefono
+$sql = "SELECT id, nombre, correo, telefono
 FROM usuarios
-WHERE correo=?";
+WHERE correo = ?";
 
-$stmt=$conn->prepare($sql);
-$stmt->bind_param("s",$correo);
-$stmt->execute();
+$stmt = $conn->prepare($sql);
+$stmt->execute([$correo]);
 
-$result=$stmt->get_result();
+$usuario = $stmt->fetch(PDO::FETCH_ASSOC);
 
-if($result->num_rows>0){
+if ($usuario) {
 
     echo json_encode([
-        "success"=>true,
-        "usuario"=>$result->fetch_assoc()
+        "success" => true,
+        "usuario" => $usuario
     ]);
 
-}else{
+} else {
 
     echo json_encode([
-        "success"=>false
+        "success" => false
     ]);
 
 }
-
-$stmt->close();
-$conn->close();

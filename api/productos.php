@@ -9,7 +9,7 @@ require_once "conexion.php";
 
 $method = $_SERVER['REQUEST_METHOD'];
 
-switch($method){
+switch ($method) {
 
     case 'GET':
 
@@ -21,13 +21,8 @@ switch($method){
                     ON p.categoria_id = c.id
                 ORDER BY p.id DESC";
 
-        $result = $conn->query($sql);
-
-        $productos = [];
-
-        while($row = $result->fetch_assoc()){
-            $productos[] = $row;
-        }
+        $stmt = $conn->query($sql);
+        $productos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         echo json_encode($productos);
         break;
@@ -61,8 +56,7 @@ switch($method){
             (?, ?, ?, ?, ?, ?, ?, ?)
         ");
 
-        $stmt->bind_param(
-            "sssiiddd",
+        $ok = $stmt->execute([
             $codigo,
             $nombre,
             $descripcion,
@@ -71,10 +65,10 @@ switch($method){
             $precio_compra,
             $precio_venta,
             $iva
-        );
+        ]);
 
         echo json_encode([
-            "success"=>$stmt->execute()
+            "success" => $ok
         ]);
 
         break;
@@ -99,8 +93,7 @@ switch($method){
             WHERE id=?
         ");
 
-        $stmt->bind_param(
-            "sssiidddi",
+        $ok = $stmt->execute([
             $data['codigo'],
             $data['nombre'],
             $data['descripcion'],
@@ -110,10 +103,10 @@ switch($method){
             $data['precio_venta'],
             $data['iva'],
             $id
-        );
+        ]);
 
         echo json_encode([
-            "success"=>$stmt->execute()
+            "success" => $ok
         ]);
 
         break;
@@ -128,10 +121,10 @@ switch($method){
             "DELETE FROM productos WHERE id=?"
         );
 
-        $stmt->bind_param("i",$id);
+        $ok = $stmt->execute([$id]);
 
         echo json_encode([
-            "success"=>$stmt->execute()
+            "success" => $ok
         ]);
 
         break;

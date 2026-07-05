@@ -29,41 +29,38 @@ $sql = "SELECT
         WHERE usuarios.correo = ?";
 
 $stmt = $conn->prepare($sql);
-$stmt->bind_param("s",$correo);
-$stmt->execute();
+$stmt->execute([$correo]);
 
-$result = $stmt->get_result();
+$user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-if($result->num_rows==0){
+if (!$user) {
     echo json_encode([
-        "success"=>false,
-        "mensaje"=>"Usuario no encontrado"
+        "success" => false,
+        "mensaje" => "Usuario no encontrado"
     ]);
     exit;
 }
-
-$user = $result->fetch_assoc();
 
 if (!password_verify($password, $user["password"])) {
     echo json_encode([
-        "success"=>false,
-        "mensaje"=>"Contraseña incorrecta"
+        "success" => false,
+        "mensaje" => "Contraseña incorrecta"
     ]);
     exit;
 }
 
-if(strtolower($user["rol"]) != strtolower($rol)){
+if (strtolower($user["rol"]) != strtolower($rol)) {
     echo json_encode([
-        "success"=>false,
-        "mensaje"=>"Rol incorrecto"
+        "success" => false,
+        "mensaje" => "Rol incorrecto"
     ]);
     exit;
 }
 
-if($user["estado"]==0){
+if ((int)$user["estado"] === 0) {
     echo json_encode([
-        "success"=>false,
-        "mensaje"=>"Usuario inactivo"
+        "success" => false,
+        "mensaje" => "Usuario inactivo"
     ]);
     exit;
 }
@@ -71,6 +68,6 @@ if($user["estado"]==0){
 unset($user["password"]);
 
 echo json_encode([
-    "success"=>true,
-    "usuario"=>$user
+    "success" => true,
+    "usuario" => $user
 ]);

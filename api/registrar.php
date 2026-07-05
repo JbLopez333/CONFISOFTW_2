@@ -28,13 +28,10 @@ if ($nombre == "" || $apellido == "" || $correo == "" || $password == "" || $rol
 }
 
 // Verificar correo existente
-$sql = "SELECT id FROM usuarios WHERE correo = ?";
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("s", $correo);
-$stmt->execute();
-$stmt->store_result();
+$stmt = $conn->prepare("SELECT id FROM usuarios WHERE correo = ?");
+$stmt->execute([$correo]);
 
-if ($stmt->num_rows > 0) {
+if ($stmt->fetch()) {
     echo json_encode([
         "success" => false,
         "mensaje" => "Este correo ya está registrado."
@@ -43,22 +40,18 @@ if ($stmt->num_rows > 0) {
 }
 
 // Obtener rol_id
-$sqlRol = "SELECT id FROM roles WHERE LOWER(nombre)=LOWER(?)";
-$stmtRol = $conn->prepare($sqlRol);
-$stmtRol->bind_param("s",$rol);
-$stmtRol->execute();
+$stmtRol = $conn->prepare("SELECT id FROM roles WHERE LOWER(nombre) = LOWER(?)");
+$stmtRol->execute([$rol]);
+$rolData = $stmtRol->fetch(PDO::FETCH_ASSOC);
 
-$resRol = $stmtRol->get_result();
-
-if($resRol->num_rows==0){
+if (!$rolData) {
     echo json_encode([
-        "success"=>false,
-        "mensaje"=>"Rol no válido."
+        "success" => false,
+        "mensaje" => "Rol no válido."
     ]);
     exit;
 }
 
-$rolData = $resRol->fetch_assoc();
 $rol_id = $rolData["id"];
 
 // Generar usuario automáticamente
@@ -69,39 +62,35 @@ $usuario = preg_replace('/\s+/', '', $usuario);
 $baseUsuario = $usuario;
 $i = 1;
 
-while(true){
+while (true) {
 
-    $sqlUser = "SELECT id FROM usuarios WHERE usuario=?";
-    $st = $conn->prepare($sqlUser);
-    $st->bind_param("s",$usuario);
-    $st->execute();
-    $st->store_result();
+    $st = $conn->prepare("SELECT id FROM usuarios WHERE usuario = ?");
+    $st->execute([$usuario]);
 
-    if($st->num_rows==0){
+    if (!$st->fetch()) {
         break;
     }
 
-    $usuario = $baseUsuario.$i;
+    $usuario = $baseUsuario . $i;
     $i++;
 }
 
 // Si no escriben documento, generar uno temporal
-if($documento==""){
+if ($documento == "") {
     $documento = time();
 }
 
 // Encriptar contraseña
-$passwordHash = password_hash($password,PASSWORD_DEFAULT);
+$passwordHash = password_hash($password, PASSWORD_DEFAULT);
 
 // Insertar usuario
 $sql = "INSERT INTO usuarios
-(documento,nombre,apellido,usuario,correo,password,telefono,rol_id,estado)
-VALUES(?,?,?,?,?,?,?,?,1)";
+(documento, nombre, apellido, usuario, correo, password, telefono, rol_id, estado)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)";
 
 $stmt = $conn->prepare($sql);
 
-$stmt->bind_param(
-    "sssssssi",
+$ok = $stmt->execute([
     $documento,
     $nombre,
     $apellido,
@@ -110,20 +99,20 @@ $stmt->bind_param(
     $passwordHash,
     $telefono,
     $rol_id
-);
+]);
 
-if($stmt->execute()){
+if ($ok) {
 
     echo json_encode([
-        "success"=>true,
-        "mensaje"=>"Usuario registrado correctamente."
+        "success" => true,
+        "mensaje" => "Usuario registrado correctamente."
     ]);
 
-}else{
+} else {
 
     echo json_encode([
-        "success"=>false,
-        "mensaje"=>"Error al registrar."
+        "success" => false,
+        "mensaje" => "Error al registrar."
     ]);
 
 }
