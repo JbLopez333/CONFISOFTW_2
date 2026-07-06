@@ -31,6 +31,7 @@ class Database {
       ganancias: 'cc_ganancias',
       notifs:    'cc_notificaciones',
     };
+    this._productosCache = [];
     this._inicializarDatosSemilla();
   }
 
@@ -211,10 +212,29 @@ async actualizarPass(email,nuevaPass){
      PRODUCTOS
      ══════════════════════════════════════════════════════════ */
 
-  /** Obtiene todos los productos */
+  /** Obtiene todos los productos (desde la caché ya cargada) */
   getProductos() {
-    // API: const r = await fetch(`${API_BASE_URL}/productos`); return (await r.json()).map(Producto.fromJSON);
-    return this._cargar(this._keys.productos).map(Producto.fromJSON);
+    return this._productosCache || [];
+  }
+
+  /** Descarga la lista real de productos desde Supabase y actualiza la caché */
+  async refrescarProductos() {
+    try {
+      const resp = await fetch(`${API_BASE_URL}/productos.php`);
+      const data = await resp.json();
+      this._productosCache = data.map(p => new Producto(
+        p.id,
+        p.nombre,
+        Number(p.precio_venta),
+        Number(p.stock),
+        p.categoria || 'Sin categoría',
+        p.imagen || '📦',
+        0
+      ));
+    } catch (e) {
+      this._productosCache = this._productosCache || [];
+    }
+    return this._productosCache;
   }
 
   /** Busca productos por texto */
@@ -226,28 +246,44 @@ async actualizarPass(email,nuevaPass){
   }
 
   /** Crea un producto */
-  crearProducto(producto) {
-    // API: const r = await fetch(`${API_BASE_URL}/productos`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(producto.toJSON()) });
-    const lista = this._cargar(this._keys.productos);
-    producto.id = this._nextId(lista);
-    lista.push(producto.toJSON());
-    this._guardar(this._keys.productos, lista);
-    return producto;
+  async crearProducto(producto) {
+    await fetch(`${API_BASE_URL}/productos.php`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        nombre: producto.nombre,
+        categoria: producto.categoria,
+        precio_venta: producto.precio,
+        precio_compra: producto.precio,
+        imagen: producto.emoji,
+        stock: producto.stock
+      })
+    });
+    await this.refrescarProductos();
   }
 
   /** Actualiza un producto */
-  actualizarProducto(producto) {
-    // API: await fetch(`${API_BASE_URL}/productos/${producto.id}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(producto.toJSON()) });
-    const lista = this._cargar(this._keys.productos);
-    const idx   = lista.findIndex(p => p.id === producto.id);
-    if (idx !== -1) { lista[idx] = producto.toJSON(); this._guardar(this._keys.productos, lista); }
+  async actualizarProducto(producto) {
+    await fetch(`${API_BASE_URL}/productos.php`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: producto.id,
+        nombre: producto.nombre,
+        categoria: producto.categoria,
+        precio_venta: producto.precio,
+        precio_compra: producto.precio,
+        imagen: producto.emoji,
+        stock: producto.stock
+      })
+    });
+    await this.refrescarProductos();
   }
 
   /** Elimina un producto por ID */
-  eliminarProducto(id) {
-    // API: await fetch(`${API_BASE_URL}/productos/${id}`, { method:'DELETE' });
-    const lista = this._cargar(this._keys.productos).filter(p => p.id !== id);
-    this._guardar(this._keys.productos, lista);
+  async eliminarProducto(id) {
+    await fetch(`${API_BASE_URL}/productos.php?id=${id}`, { method: 'DELETE' });
+    await this.refrescarProductos();
   }
 
   /* ══════════════════════════════════════════════════════════

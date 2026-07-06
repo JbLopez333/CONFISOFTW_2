@@ -52,18 +52,21 @@
     /* ══════════════════════════════════════════════════════════
       SECCIÓN: PRODUCTOS
       ══════════════════════════════════════════════════════════ */
-    function renderProductos(c) {
+    async function renderProductos(c) {
       c.innerHTML = `
         <h2 class="page-title">Catálogo de Productos</h2>
         <p class="page-sub">Explora nuestros productos y arma tu pedido.</p>
         <div class="search-bar">
           <span>🔍</span>
           <input id="search-input" placeholder="Buscar por nombre o categoría..." />
-          <span class="search-count" id="search-count">20 productos</span>
+          <span class="search-count" id="search-count">Cargando…</span>
         </div>
         <div class="products-grid" id="prod-grid"></div>`;
 
-      renderGrid(db.getProductos().slice(0, 20));
+      await db.refrescarProductos();
+      const prods = db.getProductos();
+      document.getElementById('search-count').textContent = prods.length + ' productos';
+      renderGrid(prods.slice(0, 20));
 
       document.getElementById('search-input').addEventListener('input', function () {
         const term = this.value.trim();

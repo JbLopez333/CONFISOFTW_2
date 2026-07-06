@@ -53,7 +53,7 @@ const AdminApp = (() => {
   /* ══════════════════════════════════════════════════════════
      SECCIÓN: PRODUCTOS
      ══════════════════════════════════════════════════════════ */
-  function renderProductos(c) {
+  async function renderProductos(c) {
     c.innerHTML = `
       <h2 class="page-title">Gestión de Productos</h2>
       <p class="page-sub">Administra el catálogo completo de la tienda.</p>
@@ -64,7 +64,7 @@ const AdminApp = (() => {
       <div class="table-wrap">
         <table>
           <thead><tr><th></th><th>Nombre</th><th>Precio</th><th>Stock</th><th>Categoría</th><th>Vendidos</th><th>Acciones</th></tr></thead>
-          <tbody id="tbody-prod"></tbody>
+          <tbody id="tbody-prod"><tr><td colspan="7" style="text-align:center;padding:24px">Cargando productos…</td></tr></tbody>
         </table>
       </div>
       <!-- Modal producto -->
@@ -86,8 +86,9 @@ const AdminApp = (() => {
           </div>
         </div>
       </div>`;
-    refreshTablaProductos();
     document.getElementById('btn-nuevo-prod').onclick = () => abrirModalProducto(null);
+    await db.refrescarProductos();
+    refreshTablaProductos();
   }
 
   function refreshTablaProductos() {
@@ -120,7 +121,7 @@ const AdminApp = (() => {
     UI.openModal('modal-prod');
   }
 
-  function guardarProducto(id) {
+  async function guardarProducto(id) {
     const nombre = document.getElementById('p-nombre').value.trim();
     if (!nombre) { UI.toast('⚠️ Ingresa un nombre'); return; }
     const prod = new Producto(
@@ -131,16 +132,16 @@ const AdminApp = (() => {
       document.getElementById('p-cat').value.trim(),
       document.getElementById('p-emoji').value || '📦'
     );
-    if (id) { prod.id = id; db.actualizarProducto(prod); UI.toast('✅ Producto actualizado'); }
-    else    { db.crearProducto(prod); UI.toast('✅ Producto agregado'); }
+    if (id) { prod.id = id; await db.actualizarProducto(prod); UI.toast('✅ Producto actualizado'); }
+    else    { await db.crearProducto(prod); UI.toast('✅ Producto agregado'); }
     UI.closeModal('modal-prod');
     refreshTablaProductos();
   }
 
   function editarProducto(id)   { abrirModalProducto(id); }
-  function eliminarProducto(id) {
+  async function eliminarProducto(id) {
     if (!confirm('¿Eliminar este producto?')) return;
-    db.eliminarProducto(id);
+    await db.eliminarProducto(id);
     refreshTablaProductos();
     UI.toast('🗑️ Producto eliminado');
   }
@@ -148,7 +149,8 @@ const AdminApp = (() => {
   /* ══════════════════════════════════════════════════════════
      SECCIÓN: INVENTARIO
      ══════════════════════════════════════════════════════════ */
-  function renderInventario(c) {
+  async function renderInventario(c) {
+    await db.refrescarProductos();
     const prods    = db.getProductos();
     const gans     = db.getGanancias();
     const semanas  = db.gananciasPorSemana();
