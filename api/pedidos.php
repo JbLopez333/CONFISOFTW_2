@@ -100,16 +100,18 @@ switch ($method) {
 
             // La fecha la genera la base de datos (now()) para evitar
             // problemas de formato con la columna timestamp.
+            // NOTA: no llenamos cliente_id porque esa columna apunta a una
+            // tabla "clientes" separada que esta app no usa; los usuarios
+            // que compran viven en la tabla "usuarios" (usuario_id).
             $stmt = $conn->prepare("
                 INSERT INTO pedidos
-                    (usuario_id, cliente_id, usuario_nombre, metodo_pago, tiempo_recogida, estado, subtotal, iva, total, fecha)
+                    (usuario_id, usuario_nombre, metodo_pago, tiempo_recogida, estado, subtotal, iva, total, fecha)
                 VALUES
-                    (?, ?, ?, ?, ?, ?, ?, 0, ?, now())
+                    (?, ?, ?, ?, ?, ?, 0, ?, now())
                 RETURNING id
             ");
             $stmt->execute([
                 $usuarioId,
-                $usuarioId,       // cliente_id: usamos el mismo id del usuario que compra
                 $usuarioNombre,
                 $metodoPago,
                 $tiempoRecogida,
@@ -151,6 +153,7 @@ switch ($method) {
 
     case 'PUT':
 
+        // Solo se usa para actualizar el estado del pedido (pendiente / listo / entregado)
         parse_str($_SERVER['QUERY_STRING'], $params);
         $id = $params['id'] ?? null;
 
