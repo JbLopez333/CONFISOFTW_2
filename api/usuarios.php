@@ -1,5 +1,11 @@
 <?php
 
+// ============================================================
+// API de USUARIOS (panel administrativo)
+// CRUD completo de usuarios, con protección especial para que
+// nadie pueda asignar el rol "Administrador" sin ya ser Administrador.
+// ============================================================
+
 header("Content-Type: application/json");
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: GET,POST,PUT,DELETE");
@@ -39,6 +45,9 @@ function quienLlamaEsAdmin($conn, $admin_id) {
 
 switch ($method) {
 
+// ----------------------------------------------------------------
+// GET: listar todos los usuarios junto con el nombre de su rol
+// ----------------------------------------------------------------
 case "GET":
 
     $sql = "SELECT
@@ -66,6 +75,9 @@ case "GET":
 
     break;
 
+// ----------------------------------------------------------------
+// POST: crear un usuario nuevo (desde el panel administrativo)
+// ----------------------------------------------------------------
 case "POST":
 
     $data = json_decode(file_get_contents("php://input"), true);
@@ -73,7 +85,7 @@ case "POST":
     // Si se intenta crear un usuario con rol Administrador, quien llama
     // debe ser, a su vez, un Administrador ya existente.
     if (esRolAdministrador($conn, $data["rol_id"]) && !quienLlamaEsAdmin($conn, $data["admin_id"] ?? null)) {
-        http_response_code(403);
+        http_response_code(403); // Prohibido
         echo json_encode([
             "success" => false,
             "mensaje" => "Solo un Administrador puede asignar el rol Administrador."
@@ -98,6 +110,7 @@ case "POST":
     (?, ?, ?, ?, ?, ?, ?, ?, ?)
     ");
 
+    // La contraseña se encripta antes de guardarla
     $password = password_hash(
         $data["password"],
         PASSWORD_DEFAULT
@@ -121,6 +134,9 @@ case "POST":
 
     break;
 
+// ----------------------------------------------------------------
+// PUT: editar un usuario existente
+// ----------------------------------------------------------------
 case "PUT":
 
     $data = json_decode(file_get_contents("php://input"), true);
@@ -167,7 +183,9 @@ case "PUT":
             "success" => $ok
         ]);
     } catch (PDOException $e) {
-        http_response_code(409);
+        // Ocurre, por ejemplo, si el correo/usuario/documento ya existe
+        // en otra cuenta (violación de restricción UNIQUE)
+        http_response_code(409); // Conflicto
         echo json_encode([
             "success" => false,
             "mensaje" => "No se pudo guardar: el correo, usuario o documento ya está en uso por otra cuenta."
@@ -176,6 +194,9 @@ case "PUT":
 
     break;
 
+// ----------------------------------------------------------------
+// DELETE: eliminar un usuario por id (viene como ?id=... en la URL)
+// ----------------------------------------------------------------
 case "DELETE":
 
     parse_str($_SERVER["QUERY_STRING"], $params);
@@ -190,6 +211,8 @@ case "DELETE":
             "success" => $ok
         ]);
     } catch (PDOException $e) {
+        // Ocurre si el usuario tiene registros relacionados (llaves foráneas)
+        // que impiden borrarlo, como pedidos o notificaciones
         http_response_code(409);
         echo json_encode([
             "success" => false,

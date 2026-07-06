@@ -9,7 +9,11 @@
 </head>
 <body>
 
-<!-- SUCCESS OVERLAY -->
+<!-- ════════════════════════════════════════════════
+     PANTALLA DE ÉXITO
+     Oculta por defecto (la muestra app.js tras un registro
+     exitoso, llenando los datos de sc-email, sc-rol, etc.)
+════════════════════════════════════════════════ -->
 <div class="success-overlay" id="success-overlay">
   <div class="confetti-container" id="confetti-container"></div>
   <div class="success-circle">✓</div>
@@ -26,7 +30,9 @@
   <button class="btn btn-rosa btn-lg" id="btn-go-login">Iniciar sesión ahora →</button>
 </div>
 
-<!-- REGISTER FORM -->
+<!-- ════════════════════════════════════════════════
+     FORMULARIO DE REGISTRO (3 pasos)
+════════════════════════════════════════════════ -->
 <div class="auth-page">
   <div class="auth-card register-card">
     <div class="auth-logo">
@@ -37,7 +43,8 @@
       <p>Crea tu cuenta en segundos</p>
     </div>
 
-    <!-- Steps -->
+    <!-- Barra visual de progreso: RegisterController.goStep()/nextStep() en app.js
+         le agrega/quita la clase "active" a cada punto según el paso actual -->
     <div class="steps-bar">
       <div class="step-wrap">
         <div class="step-dot active" id="sdot1">1</div>
@@ -55,7 +62,10 @@
       </div>
     </div>
 
-    <!-- PASO 1 -->
+    <!-- ── PASO 1: Datos personales y tipo de cuenta ──
+         Nota de seguridad: el <select> solo ofrece "Cliente" a propósito.
+         El registro público NUNCA puede crear cuentas de Administrador;
+         eso lo garantiza el servidor (api/registrar.php), no solo esta pantalla. -->
     <div id="step-content-1">
       <div class="form-row">
         <div class="form-group"><label>Nombre</label><input id="reg-nombre" placeholder="Tu nombre"></div>
@@ -76,7 +86,7 @@
       </div>
     </div>
 
-    <!-- PASO 2 -->
+    <!-- ── PASO 2: Datos de contacto (oculto hasta completar el paso 1) ── -->
     <div id="step-content-2" style="display:none">
       <div class="form-group"><label>Teléfono</label><input id="reg-tel" placeholder="300 000 0000"></div>
       <div class="form-row">
@@ -91,11 +101,14 @@
       </div>
     </div>
 
-    <!-- PASO 3 -->
+    <!-- ── PASO 3: Contraseña y confirmación (oculto hasta completar el paso 2) ──
+         La contraseña se valida en app.js (validarPasswordSegura): mínimo 8
+         caracteres, una mayúscula, un número y un símbolo. -->
     <div id="step-content-3" style="display:none">
       <div class="form-group">
         <label>Contraseña</label>
         <input type="password" id="reg-pass" placeholder="Mínimo 8 caracteres">
+        <!-- Barra de fuerza de contraseña: la llena/colorea app.js mientras el usuario escribe -->
         <div class="pass-bar-wrap"><div class="pass-bar-fill" id="pass-bar" style="width:0;background:var(--gris-200)"></div></div>
         <div class="pass-label-txt" id="pass-label"></div>
         <div style="font-size:12px;color:var(--gris-500);margin-top:4px">Debe incluir: mayúscula, número y símbolo (ej: !@#$%).</div>
@@ -113,17 +126,23 @@
       <div class="form-error" id="reg-err3"></div>
       <div style="display:flex;gap:12px;margin-top:4px">
         <button class="btn btn-outline" style="flex:1" id="btn-back3">← Atrás</button>
+        <!-- Dispara tryRegister() en app.js, que valida todo y llama a api/registrar.php -->
         <button class="btn btn-rosa"   style="flex:2" id="btn-register">🎉 Crear perfil</button>
       </div>
     </div>
   </div>
 </div>
 
+<!-- Contenedor de notificaciones tipo "toast" -->
 <div id="toast-container"></div>
 
-<script src="../js/models.js"></script>
-<script src="../js/database.js"></script>
-<script src="../js/auth.js"></script>
-<script src="../js/app.js"></script>
+<!-- ════════════════════════════════════════════════
+     SCRIPTS
+     Orden importante: cada archivo depende del anterior.
+════════════════════════════════════════════════ -->
+<script src="../js/models.js"></script>    <!-- Clases de datos: Usuario, Producto, etc. -->
+<script src="../js/database.js"></script>  <!-- Acceso a la API (Supabase) y caché de datos -->
+<script src="../js/auth.js"></script>      <!-- Registro real (AuthService.register), UI.toast -->
+<script src="../js/app.js"></script>       <!-- Lógica de esta página: pasos, validaciones -->
 </body>
 </html>

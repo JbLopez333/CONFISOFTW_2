@@ -5,35 +5,54 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ConfíComputos — Tecnología y Papelería para tu negocio</title>
   <meta name="description" content="ConfíComputos: tu aliado en tecnología, papelería y soluciones empresariales en Colombia.">
+  <!-- Variables de diseño compartidas (colores, tipografías) -->
   <link rel="stylesheet" href="css/variables.css">
+  <!-- Estilos propios de esta página de aterrizaje (landing) -->
   <link rel="stylesheet" href="css/landing.css">
 <style>
-/* ══ CHATBOT ══ */
+/* ══════════════════════════════════════════════════════════
+   CHATBOT "ConfíBot"
+   Estilos del botón flotante y la ventana de chat simulado
+   que aparece en la esquina inferior derecha de la página.
+   La lógica (qué responde y cuándo) está al final del archivo.
+   ══════════════════════════════════════════════════════════ */
+/* Botón flotante circular que abre/cierra el chat */
 #chat-fab{position:fixed;bottom:28px;right:28px;z-index:1050;width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,#ec4899,#be185d);border:none;box-shadow:0 4px 20px rgba(190,24,93,.4);display:flex;align-items:center;justify-content:center;font-size:26px;cursor:pointer;transition:transform .2s}
 #chat-fab:hover{transform:scale(1.1)}
+/* Puntito verde animado que indica "hay novedades" sobre el botón */
 .chat-notif{position:absolute;top:-2px;right:-2px;width:16px;height:16px;background:#22c55e;border-radius:50%;border:2px solid #fff;animation:pulse-dot 2s ease infinite}
 @keyframes pulse-dot{0%,100%{transform:scale(1)}50%{transform:scale(1.3)}}
+/* Ventana del chat (oculta por defecto; se muestra agregando la clase "open") */
 #chat-window{position:fixed;bottom:100px;right:28px;z-index:1049;width:340px;max-width:calc(100vw - 40px);background:#fff;border-radius:20px;box-shadow:0 8px 40px rgba(0,0,0,.18);display:none;flex-direction:column;overflow:hidden;border:1.5px solid #fbcfe8;animation:popIn .25s ease}
 #chat-window.open{display:flex}
+/* Encabezado de la ventana: avatar, nombre y estado del bot */
 .chat-header{background:linear-gradient(135deg,#db2777,#9d174d);padding:14px 18px;display:flex;align-items:center;gap:10px}
 .ch-avatar{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
 .ch-name{font-weight:700;font-size:14px;color:#fff}.ch-status{font-size:11px;color:rgba(255,255,255,.75)}
 .ch-close{margin-left:auto;background:none;border:none;color:#fff;font-size:20px;cursor:pointer;opacity:.75;padding:2px 6px}.ch-close:hover{opacity:1}
+/* Cuerpo donde se acumulan los mensajes (scroll interno) */
 .chat-body{flex:1;overflow-y:auto;padding:14px;max-height:320px;background:#fafafa;display:flex;flex-direction:column;gap:10px}
+/* Burbuja de mensaje genérica */
 .chat-msg{max-width:82%;padding:10px 14px;border-radius:16px;font-size:13px;line-height:1.55}
+/* Burbuja del bot: alineada a la izquierda, fondo blanco */
 .chat-msg.bot{background:#fff;border:1px solid #fbcfe8;color:#111827;border-bottom-left-radius:4px;align-self:flex-start}
+/* Burbuja del usuario: alineada a la derecha, fondo rosado */
 .chat-msg.user{background:linear-gradient(135deg,#ec4899,#be185d);color:#fff;border-bottom-right-radius:4px;align-self:flex-end}
 .chat-msg .msg-time{font-size:10px;opacity:.6;margin-top:4px;text-align:right}
+/* Animación de "escribiendo..." (3 puntos parpadeando) mientras el bot "piensa" */
 .chat-typing{display:flex;gap:4px;align-items:center;padding:10px 14px;background:#fff;border:1px solid #fbcfe8;border-radius:16px;border-bottom-left-radius:4px;align-self:flex-start;width:fit-content}
 .chat-typing span{width:7px;height:7px;background:#f472b6;border-radius:50%;animation:blink 1.2s ease infinite}
 .chat-typing span:nth-child(2){animation-delay:.2s}.chat-typing span:nth-child(3){animation-delay:.4s}
 @keyframes blink{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
+/* Barra inferior con el campo de texto y botón de enviar */
 .chat-footer{padding:10px;border-top:1px solid #fbcfe8;display:flex;gap:8px}
 .chat-footer input{flex:1;border:1.5px solid #f9a8d4;border-radius:20px;padding:8px 14px;font-size:13px;outline:none;font-family:inherit;transition:border-color .2s}
 .chat-footer input:focus{border-color:#ec4899}
 .chat-footer button{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#ec4899,#be185d);border:none;color:#fff;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;transition:transform .15s}.chat-footer button:hover{transform:scale(1.1)}
+/* Botones de "preguntas rápidas" (Productos, Precios, etc.) que aparecen bajo el saludo */
 .chat-options{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
 .chat-opt-btn{background:#fff0f5;border:1px solid #f9a8d4;border-radius:20px;padding:5px 12px;font-size:12px;color:#be185d;cursor:pointer;font-family:inherit;transition:background .15s}.chat-opt-btn:hover{background:#fce7f3}
+/* En pantallas muy angostas, el chat ocupa casi todo el ancho */
 @media(max-width:480px){#chat-window{width:calc(100vw - 32px);right:16px;bottom:80px}#chat-fab{right:16px;bottom:16px}}
 </style>
 </head>
@@ -65,7 +84,7 @@
   </button>
 </nav>
 
-<!-- Menú móvil -->
+<!-- Menú móvil: se despliega con el botón hamburguesa (lógica en js/landing.js) -->
 <div class="mobile-menu" id="mobile-menu">
   <a href="#nosotros">Nosotros</a>
   <a href="#servicios">Servicios</a>
@@ -94,6 +113,8 @@
         <a href="app.html" class="btn btn-rosa btn-lg">Abrir aplicación</a>
         <a href="#nosotros" class="btn btn-outline btn-lg">Conocer más</a>
       </div>
+      <!-- Contadores animados: landing.js lee "data-target" y anima el número
+           desde 0 hasta ese valor cuando la sección entra en pantalla -->
       <div class="hero-stats">
         <div class="hero-stat">
           <div class="num" data-target="1500" data-suffix="+">0+</div>
@@ -110,6 +131,8 @@
       </div>
     </div>
 
+    <!-- Mockup decorativo: una vista previa falsa/estática del panel de
+         administración, solo con fines visuales (no es funcional) -->
     <div class="hero-visual">
       <div class="hero-mockup">
         <div class="hm-header">
@@ -160,6 +183,7 @@
         <p>
           Creemos en el comercio justo, en la tecnología accesible y en que cada cliente merece ser atendido con respeto y compromiso.
         </p>
+        <!-- Línea de tiempo con los hitos/logros de la empresa -->
         <div class="hitos">
           <div class="hito">
             <div class="hito-icon">🚀</div>
@@ -370,6 +394,8 @@
         </div>
       </div>
       <div>
+        <!-- Formulario de contacto visual: por ahora no envía datos a ningún
+             lado (no tiene backend conectado); solo es parte del diseño -->
         <div class="card" style="height:100%">
           <div class="card-title">📬 Escríbenos</div>
           <div class="form-group"><label>Tu nombre</label><input type="text" placeholder="Nombre completo"></div>
@@ -457,6 +483,7 @@
   </div>
 
   <div class="footer-bottom">
+    <!-- "current-year" se actualiza automáticamente por año vía js/landing.js -->
     <p>© <span id="current-year">2026</span> ConfíComputos — Todos los derechos reservados.</p>
     <div class="fb-logo-mini">
       <div class="footer-logo-mini"> <img src="img/logo.jpeg" alt="ConfíComputos" class="footer-logo"></div>
@@ -468,9 +495,14 @@
 <!-- Toast container -->
 <div id="toast-container"></div>
 
+<!-- Animaciones de scroll, contadores animados, menú móvil y año del footer -->
 <script src="js/landing.js"></script>
 
-<!-- ══ CHATBOT CONFIBOT ══ -->
+<!-- ══════════════════════════════════════════════════════════
+     WIDGET DE CHAT — ConfíBot
+     Botón flotante + ventana de chat. Es un asistente simulado:
+     no usa IA real, solo detecta palabras clave (ver script abajo).
+     ══════════════════════════════════════════════════════════ -->
 <button id="chat-fab" title="Chatea con ConfíBot">
   💬
   <div class="chat-notif"></div>
@@ -492,8 +524,14 @@
 </div>
 
 <script>
-/* ══ CONFIBOT ══ */
+/* ══════════════════════════════════════════════════════════
+   LÓGICA DE CONFIBOT
+   Es un chatbot basado en reglas simples (no IA real):
+   busca palabras clave en el mensaje del visitante y responde
+   con un texto predefinido tomado al azar de una lista.
+   ══════════════════════════════════════════════════════════ */
 (function(){
+  // Banco de respuestas: cada "tema" tiene una o varias frases posibles
   const RESP = {
     saludo:    ['¡Hola! 👋 Soy **ConfíBot**, el asistente de ConfíComputos. ¿En qué te puedo ayudar hoy?','¡Bienvenido/a! 🌸 Estoy aquí para resolver tus dudas.'],
     productos: ['Tenemos más de 20 productos en tecnología 💻 y papelería 📓. ¡Explora el catálogo en nuestra aplicación!','Manejamos laptops, tablets, accesorios, cuadernos, bolígrafos y más. ¿Te interesa alguna categoría?'],
@@ -507,12 +545,15 @@
     gracias:   ['¡Con gusto! 🌸 Si tienes más preguntas, aquí estaré.','¡Fue un placer ayudarte! 💖 Recuerda que en ConfíComputos siempre tenemos algo para ti.'],
     default:   ['Entiendo tu consulta 😊. Para una respuesta más detallada, puedes escribirnos directamente o visitar la sección de contacto.','Mmm, no estoy seguro/a de esa. Te recomiendo contactarnos por WhatsApp. 🌸']
   };
+  // Botones de "preguntas rápidas" que aparecen debajo del saludo inicial
   const OPTS = [
     {l:'📦 Productos disponibles',k:'productos'},{l:'💰 Precios',k:'precios'},
     {l:'🛒 Cómo hacer un pedido',k:'pedido'},{l:'💳 Métodos de pago',k:'pago'},
     {l:'🕐 Horario',k:'horario'},{l:'📍 Dónde estamos',k:'ubicacion'},
   ];
 
+  // Analiza el texto del visitante con expresiones regulares y devuelve
+  // la clave del tema de RESP que mejor coincide (o "default" si ninguno)
   function detectar(msg){
     const m=msg.toLowerCase();
     if(/hola|buenos|buenas|hey|saludos/.test(m))return 'saludo';
@@ -528,11 +569,14 @@
     return 'default';
   }
 
+  // Elige una respuesta al azar entre las disponibles para ese tema
   function getRespuesta(k){
     const arr=RESP[k]||RESP.default;
     return arr[Math.floor(Math.random()*arr.length)];
   }
 
+  // Agrega una burbuja de mensaje al chat (del bot o del usuario).
+  // Si showOpts es true, además muestra los botones de preguntas rápidas.
   let msgId=0;
   function addMsg(texto,tipo,showOpts){
     const body=document.getElementById('chat-body');
@@ -557,6 +601,8 @@
     body.scrollTop=body.scrollHeight;
   }
 
+  // Muestra/oculta la animación de "escribiendo..." mientras se simula
+  // que el bot está pensando la respuesta
   function mostrarTyping(){
     const body=document.getElementById('chat-body');
     if(!body)return;
@@ -567,6 +613,8 @@
   }
   function ocultarTyping(){document.getElementById('typing-ind')?.remove();}
 
+  // Envía el mensaje del usuario, simula una pequeña espera (700-1300ms)
+  // y luego muestra la respuesta detectada (o forzada por un botón rápido)
   function enviar(texto,forzarKey){
     if(!texto.trim())return;
     addMsg(texto,'user');
@@ -580,6 +628,8 @@
     },700+Math.random()*600);
   }
 
+  // Abre/cierra la ventana de chat; la primera vez que se abre, muestra
+  // el saludo inicial junto con los botones de preguntas rápidas
   let isOpen=false;
   function toggle(){
     isOpen=!isOpen;
@@ -590,6 +640,7 @@
     }
   }
 
+  // Conecta los eventos de clic/teclado una vez que el HTML ya está cargado
   document.addEventListener('DOMContentLoaded',()=>{
     document.getElementById('chat-fab')?.addEventListener('click',toggle);
     document.getElementById('chat-close')?.addEventListener('click',toggle);

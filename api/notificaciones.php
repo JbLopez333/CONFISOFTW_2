@@ -1,5 +1,11 @@
 <?php
 
+// ============================================================
+// API de NOTIFICACIONES
+// Permite listar, crear y marcar como leídas las notificaciones
+// del sistema (ej: avisos de nuevos pedidos).
+// ============================================================
+
 header("Content-Type: application/json");
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE");
@@ -11,6 +17,9 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 switch ($method) {
 
+    // ----------------------------------------------------------------
+    // GET: listar todas las notificaciones, más recientes primero
+    // ----------------------------------------------------------------
     case 'GET':
 
         $stmt = $conn->query("
@@ -20,17 +29,22 @@ switch ($method) {
         ");
         $notifs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+        // Se recorren los resultados para convertir los tipos de datos
+        // al formato correcto que espera el front-end (JS)
         foreach ($notifs as &$n) {
             $n['id']         = (int) $n['id'];
             $n['leida']      = (bool) ((int) $n['leida']);
             $n['fecha']      = date('c', strtotime($n['fecha'])); // ISO 8601, listo para new Date() en JS
             $n['usuario_id'] = $n['usuario_id'] !== null ? (int) $n['usuario_id'] : null;
         }
-        unset($n);
+        unset($n); // buena práctica: romper la referencia del foreach
 
         echo json_encode($notifs);
         break;
 
+    // ----------------------------------------------------------------
+    // POST: crear una notificación nueva
+    // ----------------------------------------------------------------
     case 'POST':
 
         $data = json_decode(file_get_contents("php://input"), true);
@@ -38,7 +52,7 @@ switch ($method) {
         $titulo    = $data['titulo']    ?? '';
         $mensaje   = $data['mensaje']   ?? '';
         $tipo      = $data['tipo']      ?? 'pedido';
-        $usuarioId = $data['usuarioId'] ?? null;
+        $usuarioId = $data['usuarioId'] ?? null; // null = notificación general, no de un usuario específico
 
         if ($titulo === '' || $mensaje === '') {
             echo json_encode(["success" => false, "mensaje" => "Faltan datos de la notificación."]);
@@ -60,26 +74,35 @@ switch ($method) {
         ]);
         break;
 
+    // ----------------------------------------------------------------
+    // PUT: marcar notificaciones como leídas
+    // ?todas=1  -> marca todas como leídas
+    // ?id=5     -> marca solo esa como leída
+    // ----------------------------------------------------------------
     case 'PUT':
 
-        // ?todas=1  -> marca todas como leídas
-        // ?id=5     -> marca solo esa como leída
         parse_str($_SERVER['QUERY_STRING'], $params);
 
         if (isset($params['todas'])) {
+            // Marca absolutamente todas las notificaciones como leídas
             $stmt = $conn->prepare("UPDATE notificaciones SET leida = 1");
             $ok = $stmt->execute();
         } elseif (isset($params['id'])) {
+            // Marca solo una notificación puntual como leída
             $stmt = $conn->prepare("UPDATE notificaciones SET leida = 1 WHERE id = ?");
             $ok = $stmt->execute([$params['id']]);
         } else {
+            // No se especificó ni "todas" ni "id"
             $ok = false;
         }
 
         echo json_encode(["success" => $ok]);
         break;
 
+    // ----------------------------------------------------------------
+    // Cualquier otro método HTTP no está soportado
+    // ----------------------------------------------------------------
     default:
-        http_response_code(405);
+        http_response_code(405); // Método no permitido
         echo json_encode(["success" => false, "mensaje" => "Método no permitido."]);
 }

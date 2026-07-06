@@ -1,7 +1,14 @@
 <?php
+// ============================================================
+// REGISTRO PÚBLICO de nuevos usuarios (auto-registro de clientes).
+// Cualquier persona puede llamar a este endpoint, por eso el rol
+// se fuerza SIEMPRE a "Cliente" y nunca se toma del formulario.
+// ============================================================
+
 header("Content-Type: application/json");
 require_once "conexion.php";
 
+// Este endpoint solo acepta peticiones POST
 if ($_SERVER["REQUEST_METHOD"] != "POST") {
     echo json_encode([
         "success" => false,
@@ -10,6 +17,7 @@ if ($_SERVER["REQUEST_METHOD"] != "POST") {
     exit;
 }
 
+// Datos recibidos del formulario de registro
 $nombre    = trim($_POST["nombre"] ?? "");
 $apellido  = trim($_POST["apellido"] ?? "");
 $correo    = trim($_POST["correo"] ?? "");
@@ -22,7 +30,7 @@ $documento = trim($_POST["documento"] ?? "");
 // nadie puede auto-asignarse Administrador o Empleado desde este endpoint.
 $rol = "Cliente";
 
-// Validaciones
+// Validaciones básicas de campos obligatorios
 if ($nombre == "" || $apellido == "" || $correo == "" || $password == "") {
     echo json_encode([
         "success" => false,
@@ -44,7 +52,7 @@ if (!in_array($dominio, $dominiosPermitidos)) {
     exit;
 }
 
-// Verificar correo existente
+// Verificar que el correo no esté ya registrado
 $stmt = $conn->prepare("SELECT id FROM usuarios WHERE correo = ?");
 $stmt->execute([$correo]);
 
@@ -56,12 +64,13 @@ if ($stmt->fetch()) {
     exit;
 }
 
-// Obtener rol_id
+// Buscar el id del rol "Cliente" en la tabla roles
 $stmtRol = $conn->prepare("SELECT id FROM roles WHERE LOWER(nombre) = LOWER(?)");
 $stmtRol->execute([$rol]);
 $rolData = $stmtRol->fetch(PDO::FETCH_ASSOC);
 
 if (!$rolData) {
+    // Si el rol "Cliente" no existe en la base de datos, algo está mal configurado
     echo json_encode([
         "success" => false,
         "mensaje" => "Rol no válido."
@@ -71,11 +80,13 @@ if (!$rolData) {
 
 $rol_id = $rolData["id"];
 
-// Generar usuario automáticamente
+// Generar un nombre de usuario automáticamente a partir de nombre y apellido
+// (ej: "juan.perez")
 $usuario = strtolower($nombre . "." . $apellido);
-$usuario = preg_replace('/\s+/', '', $usuario);
+$usuario = preg_replace('/\s+/', '', $usuario); // quita espacios
 
-// Si existe, agregar número
+// Si el usuario generado ya existe, se le agrega un número al final
+// hasta encontrar uno disponible (juan.perez, juan.perez1, juan.perez2, ...)
 $baseUsuario = $usuario;
 $i = 1;
 
@@ -85,22 +96,22 @@ while (true) {
     $st->execute([$usuario]);
 
     if (!$st->fetch()) {
-        break;
+        break; // nombre de usuario libre, se puede usar
     }
 
     $usuario = $baseUsuario . $i;
     $i++;
 }
 
-// Si no escriben documento, generar uno temporal
+// Si no escriben documento, se genera uno temporal usando el timestamp actual
 if ($documento == "") {
     $documento = time();
 }
 
-// Encriptar contraseña
+// Encriptar la contraseña antes de guardarla (nunca se guarda en texto plano)
 $passwordHash = password_hash($password, PASSWORD_DEFAULT);
 
-// Insertar usuario
+// Insertar el nuevo usuario, con estado = 1 (activo) por defecto
 $sql = "INSERT INTO usuarios
 (documento, nombre, apellido, usuario, correo, password, telefono, rol_id, estado)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)";

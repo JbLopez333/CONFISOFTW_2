@@ -1,5 +1,11 @@
 <?php
 
+// ============================================================
+// API de PEDIDOS
+// Maneja la creación de pedidos (con sus items/detalle) y la
+// consulta y actualización de estado de pedidos existentes.
+// ============================================================
+
 header("Content-Type: application/json");
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE");
@@ -17,6 +23,7 @@ function obtenerPedidosConItems($conn, $usuarioId = null) {
             FROM pedidos";
     $params = [];
 
+    // Si se pide un usuario específico, se filtra por su id
     if ($usuarioId !== null) {
         $sql .= " WHERE usuario_id = ?";
         $params[] = $usuarioId;
@@ -29,11 +36,13 @@ function obtenerPedidosConItems($conn, $usuarioId = null) {
     $pedidos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     if (!$pedidos) {
-        return [];
+        return []; // no hay pedidos, se evita hacer consultas innecesarias
     }
 
+    // Se obtienen los ids de todos los pedidos encontrados, para traer
+    // de una sola vez los items (detalle) de todos ellos
     $ids = array_column($pedidos, 'id');
-    $in  = implode(',', array_fill(0, count($ids), '?'));
+    $in  = implode(',', array_fill(0, count($ids), '?')); // genera "?,?,?,..."
 
     $stmtItems = $conn->prepare("
         SELECT pedido_id, producto_id, nombre, emoji, precio, cantidad
@@ -44,6 +53,8 @@ function obtenerPedidosConItems($conn, $usuarioId = null) {
     $stmtItems->execute($ids);
     $itemsRows = $stmtItems->fetchAll(PDO::FETCH_ASSOC);
 
+    // Se agrupan los items por pedido_id, para poder asignarlos
+    // fácilmente a cada pedido en el siguiente paso
     $itemsPorPedido = [];
     foreach ($itemsRows as $row) {
         $itemsPorPedido[$row['pedido_id']][] = [
@@ -55,6 +66,8 @@ function obtenerPedidosConItems($conn, $usuarioId = null) {
         ];
     }
 
+    // Se arma el resultado final: cada pedido con sus datos "camelCase"
+    // (como los espera el front-end) y su lista de items
     foreach ($pedidos as &$p) {
         $p['usuarioId']      = (int) $p['usuario_id'];
         $p['usuarioNombre']  = $p['usuario_nombre'];
@@ -63,21 +76,28 @@ function obtenerPedidosConItems($conn, $usuarioId = null) {
         $p['total']          = (float) $p['total'];
         $p['fecha']          = date('d/m/Y, h:i a', strtotime($p['fecha']));
         $p['items']          = $itemsPorPedido[$p['id']] ?? [];
+        // Se eliminan las claves originales en snake_case, ya duplicadas arriba
         unset($p['usuario_id'], $p['usuario_nombre'], $p['metodo_pago'], $p['tiempo_recogida']);
     }
-    unset($p);
+    unset($p); // rompe la referencia del foreach
 
     return $pedidos;
 }
 
 switch ($method) {
 
+    // ----------------------------------------------------------------
+    // GET: listar pedidos (todos, o solo los de ?usuario_id=...)
+    // ----------------------------------------------------------------
     case 'GET':
 
         $usuarioId = isset($_GET['usuario_id']) ? (int) $_GET['usuario_id'] : null;
         echo json_encode(obtenerPedidosConItems($conn, $usuarioId));
         break;
 
+    // ----------------------------------------------------------------
+    // POST: crear un pedido nuevo junto con todos sus items
+    // ----------------------------------------------------------------
     case 'POST':
 
         $data = json_decode(file_get_contents("php://input"), true);
@@ -90,12 +110,15 @@ switch ($method) {
         $total          = $data['total'] ?? 0;
         $items          = $data['items'] ?? [];
 
+        // Un pedido necesita obligatoriamente un usuario y al menos un producto
         if (!$usuarioId || empty($items)) {
             echo json_encode(["success" => false, "mensaje" => "Faltan datos del pedido (usuario o productos)."]);
             break;
         }
 
         try {
+            // Se usa una transacción: o se guardan el pedido Y todos sus items,
+            // o no se guarda nada (evita pedidos "a medias" si algo falla)
             $conn->beginTransaction();
 
             // La fecha la genera la base de datos (now()) para evitar
@@ -121,6 +144,7 @@ switch ($method) {
             ]);
             $pedidoId = $stmt->fetchColumn();
 
+            // Se inserta cada item (producto) del pedido en detalle_pedidos
             $stmtItem = $conn->prepare("
                 INSERT INTO detalle_pedidos (pedido_id, producto_id, nombre, emoji, precio, cantidad, subtotal)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -136,24 +160,30 @@ switch ($method) {
                     $item['emoji'] ?? '📦',
                     $precio,
                     $cantidad,
-                    $precio * $cantidad,
+                    $precio * $cantidad, // subtotal de esta línea
                 ]);
             }
 
+            // Todo salió bien: se confirman todos los cambios de una vez
             $conn->commit();
 
             echo json_encode(["success" => true, "id" => (int) $pedidoId]);
 
         } catch (Exception $e) {
+            // Si algo falla en medio del proceso, se deshace todo
+            // (no queda el pedido creado sin sus items, por ejemplo)
             $conn->rollBack();
             echo json_encode(["success" => false, "mensaje" => $e->getMessage()]);
         }
 
         break;
 
+    // ----------------------------------------------------------------
+    // PUT: actualizar solo el estado de un pedido
+    // (pendiente / listo / entregado), identificado por ?id=...
+    // ----------------------------------------------------------------
     case 'PUT':
 
-        // Solo se usa para actualizar el estado del pedido (pendiente / listo / entregado)
         parse_str($_SERVER['QUERY_STRING'], $params);
         $id = $params['id'] ?? null;
 
@@ -172,6 +202,9 @@ switch ($method) {
 
         break;
 
+    // ----------------------------------------------------------------
+    // Cualquier otro método HTTP no está soportado
+    // ----------------------------------------------------------------
     default:
         http_response_code(405);
         echo json_encode(["success" => false, "mensaje" => "Método no permitido."]);
