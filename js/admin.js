@@ -277,7 +277,6 @@ const AdminApp = (() => {
      SECCIÓN: PEDIDOS EN TIEMPO REAL
      ══════════════════════════════════════════════════════════ */
   async function renderPedidosLive(c) {
-    const notifs  = db.getNotificaciones();
     c.innerHTML = `
       <h2 class="page-title">Pedidos en Tiempo Real</h2>
       <p class="page-sub">Alertas y estado actualizado de pedidos activos.</p>
@@ -286,7 +285,9 @@ const AdminApp = (() => {
       </div>`;
 
     await db.refrescarPedidos();
+    await db.refrescarNotificaciones();
     const pedidos = db.getPedidos().filter(p => p.estado !== 'entregado');
+    const notifs  = db.getNotificaciones();
     UI.updateNotifBadge();
 
     c.innerHTML = `
@@ -341,17 +342,17 @@ const AdminApp = (() => {
             </div>
           </div>`).join('')}`;
 
-    document.getElementById('btn-marcar-leidas')?.addEventListener('click', () => {
-      db.marcarTodasLeidas();
+    document.getElementById('btn-marcar-leidas')?.addEventListener('click', async () => {
+      await db.marcarTodasLeidas();
       UI.updateNotifBadge();
       renderPedidosLive(c);
     });
   }
 
-  function marcarLeida(id) {
-    const lista = db.getNotificaciones();
-    const n = lista.find(x => x.id === id);
-    if (n) { n.leida = true; db.marcarTodasLeidas(); }
+  async function marcarLeida(id) {
+    await db.marcarNotificacionLeida(id);
+    UI.updateNotifBadge();
+    renderSection('pedidos-live');
   }
 
   async function cambiarEstado(pedidoId, estado) {

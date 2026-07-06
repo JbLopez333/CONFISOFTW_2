@@ -221,7 +221,7 @@ const StoreService = (() => {
       `${usuario.nombre} realizó un pedido por ${pedido.totalFmt}. Recoger en ${tiempoRecogida} minutos en punto físico.`,
       'pedido'
     );
-    db.agregarNotificacion(notif);
+    await db.agregarNotificacion(notif);
     // Vaciar carrito
     vaciarCarrito();
     return pedido;
@@ -285,7 +285,8 @@ const UI = (() => {
   }
 
   /* ── Actualiza badge de notificaciones ── */
-  function updateNotifBadge() {
+  async function updateNotifBadge() {
+    await db.refrescarNotificaciones();
     const cnt = db.getNotificaciones().filter(n => !n.leida).length;
     const el  = document.getElementById('notif-badge');
     if (el) { el.textContent = cnt; el.style.display = cnt > 0 ? 'flex' : 'none'; }

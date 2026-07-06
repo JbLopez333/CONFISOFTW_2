@@ -33,6 +33,7 @@ class Database {
     };
     this._productosCache = [];
     this._pedidosCache = [];
+    this._notifsCache = [];
     this._inicializarDatosSemilla();
   }
 
@@ -382,19 +383,60 @@ async actualizarPass(email,nuevaPass){
      NOTIFICACIONES
      ══════════════════════════════════════════════════════════ */
 
+  /** Descarga la lista real de notificaciones desde Supabase y actualiza la caché */
+  async refrescarNotificaciones() {
+    try {
+      const resp = await fetch(`${API_BASE_URL}/notificaciones.php`);
+      this._notifsCache = await resp.json();
+    } catch (e) {
+      this._notifsCache = this._notifsCache || [];
+    }
+    return this._notifsCache;
+  }
+
+  /** Obtiene las notificaciones ya cargadas en caché */
   getNotificaciones() {
-    return this._cargar(this._keys.notifs).map(n => Object.assign(new Notificacion('','','pedido'), n));
+    return this._notifsCache || [];
   }
 
-  agregarNotificacion(notif) {
-    const lista = this._cargar(this._keys.notifs);
-    lista.unshift(notif.toJSON());
-    this._guardar(this._keys.notifs, lista);
+  /** Crea una notificación nueva en Supabase */
+  async agregarNotificacion(notif) {
+    try {
+      const resp = await fetch(`${API_BASE_URL}/notificaciones.php`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(notif.toJSON())
+      });
+      const resultado = await resp.json();
+      await this.refrescarNotificaciones();
+      return resultado;
+    } catch (e) {
+      return { success: false };
+    }
   }
 
-  marcarTodasLeidas() {
-    const lista = this._cargar(this._keys.notifs).map(n => ({ ...n, leida:true }));
-    this._guardar(this._keys.notifs, lista);
+  /** Marca una sola notificación como leída */
+  async marcarNotificacionLeida(id) {
+    try {
+      const resp = await fetch(`${API_BASE_URL}/notificaciones.php?id=${id}`, { method: 'PUT' });
+      const resultado = await resp.json();
+      await this.refrescarNotificaciones();
+      return resultado;
+    } catch (e) {
+      return { success: false };
+    }
+  }
+
+  /** Marca todas las notificaciones como leídas */
+  async marcarTodasLeidas() {
+    try {
+      const resp = await fetch(`${API_BASE_URL}/notificaciones.php?todas=1`, { method: 'PUT' });
+      const resultado = await resp.json();
+      await this.refrescarNotificaciones();
+      return resultado;
+    } catch (e) {
+      return { success: false };
+    }
   }
 }
 
