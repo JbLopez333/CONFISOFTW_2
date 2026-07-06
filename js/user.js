@@ -21,19 +21,23 @@
     }
 
     function setupNav() {
-      document.querySelectorAll('.nav-item[data-section]').forEach(el => {
+      document.querySelectorAll('.nav-link[data-section]').forEach(el => {
         el.addEventListener('click', () => renderSection(el.dataset.section));
       });
       document.getElementById('btn-logout')?.addEventListener('click', AuthService.logout);
-      document.getElementById('btn-menu-toggle')?.addEventListener('click', () => {
-        document.getElementById('sidebar').classList.toggle('open');
-      });
       document.getElementById('btn-ir-carrito')?.addEventListener('click', () => renderSection('carrito'));
+    }
+
+    function closeMobileSidebar() {
+      const offcanvasEl = document.getElementById('offcanvasSidebar');
+      if (!offcanvasEl || !window.bootstrap) return;
+      const instance = bootstrap.Offcanvas.getInstance(offcanvasEl);
+      if (instance) instance.hide();
     }
 
     function renderSection(section) {
       currentSection = section;
-      document.querySelectorAll('.nav-item[data-section]').forEach(el => {
+      document.querySelectorAll('.nav-link[data-section]').forEach(el => {
         el.classList.toggle('active', el.dataset.section === section);
       });
       const content = document.getElementById('main-content');
@@ -45,7 +49,7 @@
         'perfil':    renderPerfil,
       };
       if (map[section]) map[section](content);
-      document.getElementById('sidebar').classList.remove('open');
+      closeMobileSidebar();
       UI.updateCartBadge();
     }
 
@@ -163,23 +167,10 @@
             <div class="form-group">
               <label>Método de pago</label>
               <div class="metodo-tabs">
-                <button class="metodo-tab active" data-metodo="tarjeta" onclick="UserApp.setMetodo('tarjeta')">💳 Tarjeta</button>
-                <button class="metodo-tab" data-metodo="nequi"   onclick="UserApp.setMetodo('nequi')">📱 Nequi</button>
-                <button class="metodo-tab" data-metodo="efectivo" onclick="UserApp.setMetodo('efectivo')">💵 Efectivo</button>
+                <button class="metodo-tab active" data-metodo="efectivo" onclick="UserApp.setMetodo('efectivo')">💵 Efectivo</button>
               </div>
             </div>
-            <div id="pay-tarjeta-fields">
-              <div class="form-group"><label>Nombre en la tarjeta</label><input id="pay-nombre" placeholder="Nombre completo"></div>
-              <div class="form-group"><label>Número de tarjeta</label><input id="pay-card" placeholder="0000 0000 0000 0000" maxlength="19"></div>
-              <div class="form-row">
-                <div class="form-group"><label>Vencimiento</label><input id="pay-exp" placeholder="MM/AA"></div>
-                <div class="form-group"><label>CVV</label><input id="pay-cvv" placeholder="123" maxlength="4"></div>
-              </div>
-            </div>
-            <div id="pay-nequi-fields" style="display:none">
-              <div class="form-group"><label>Número Nequi</label><input id="pay-nequi" placeholder="3XX XXX XXXX" maxlength="10"></div>
-            </div>
-            <div id="pay-efectivo-fields" style="display:none">
+            <div id="pay-efectivo-fields">
               <div class="info-box">📦 Paga al recoger en el punto físico. Tu pedido estará listo según el tiempo seleccionado.</div>
             </div>
             <div class="pay-error" id="pay-error"></div>
@@ -220,9 +211,6 @@
 
     function setMetodo(metodo) {
       document.querySelectorAll('.metodo-tab').forEach(t => t.classList.toggle('active', t.dataset.metodo === metodo));
-      document.getElementById('pay-tarjeta-fields').style.display = metodo === 'tarjeta'  ? 'block' : 'none';
-      document.getElementById('pay-nequi-fields').style.display   = metodo === 'nequi'    ? 'block' : 'none';
-      document.getElementById('pay-efectivo-fields').style.display = metodo === 'efectivo' ? 'block' : 'none';
     }
 
     function abrirPasarela() {
@@ -232,30 +220,9 @@
     }
 
     function procesarPago() {
-      const metodo = document.querySelector('.metodo-tab.active')?.dataset.metodo || 'tarjeta';
+      const metodo = document.querySelector('.metodo-tab.active')?.dataset.metodo || 'efectivo';
       const errEl  = document.getElementById('pay-error');
       errEl.classList.remove('show');
-
-      // Validaciones
-      if (metodo === 'tarjeta') {
-        const nombre = document.getElementById('pay-nombre')?.value.trim();
-        const card   = document.getElementById('pay-card')?.value.replace(/\s/g,'');
-        const exp    = document.getElementById('pay-exp')?.value.trim();
-        const cvv    = document.getElementById('pay-cvv')?.value.trim();
-        if (!nombre || card.length < 16 || !exp || cvv.length < 3) {
-          errEl.textContent = 'Completa todos los campos de la tarjeta.';
-          errEl.classList.add('show');
-          return;
-        }
-      }
-      if (metodo === 'nequi') {
-        const cel = document.getElementById('pay-nequi')?.value.trim();
-        if (cel.length < 10) {
-          errEl.textContent = 'Ingresa un número Nequi válido (10 dígitos).';
-          errEl.classList.add('show');
-          return;
-        }
-      }
 
       const tiempo = parseInt(document.getElementById('pay-tiempo')?.value || '20');
       const pedido = StoreService.crearPedido(currentUser, metodo, tiempo);
