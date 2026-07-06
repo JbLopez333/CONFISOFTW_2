@@ -200,6 +200,12 @@ const RegisterController = (() => {
       const email    = document.getElementById('reg-email').value.trim();
       if (!nombre || !apellido) { showErr(n, 'Ingresa nombre y apellido.'); return; }
       if (!email.includes('@')) { showErr(n, 'Ingresa un correo válido.'); return; }
+      const dominiosPermitidos = ['gmail.com', 'hotmail.com', 'outlook.com'];
+      const dominio = email.split('@')[1]?.toLowerCase();
+      if (!dominiosPermitidos.includes(dominio)) {
+        showErr(n, 'El correo debe ser de Gmail, Hotmail o Outlook.');
+        return;
+      }
       regData.nombre   = nombre + ' ' + apellido;
       regData.email    = email;
       regData.rol      = document.getElementById('reg-rol').value;

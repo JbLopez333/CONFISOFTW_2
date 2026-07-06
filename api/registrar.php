@@ -31,6 +31,19 @@ if ($nombre == "" || $apellido == "" || $correo == "" || $password == "") {
     exit;
 }
 
+// Solo se permite registro con correos de Gmail, Hotmail o Outlook
+$dominiosPermitidos = ["gmail.com", "hotmail.com", "outlook.com"];
+$partesCorreo = explode("@", $correo);
+$dominio = strtolower($partesCorreo[1] ?? "");
+
+if (!in_array($dominio, $dominiosPermitidos)) {
+    echo json_encode([
+        "success" => false,
+        "mensaje" => "El correo debe ser de Gmail, Hotmail o Outlook."
+    ]);
+    exit;
+}
+
 // Verificar correo existente
 $stmt = $conn->prepare("SELECT id FROM usuarios WHERE correo = ?");
 $stmt->execute([$correo]);
