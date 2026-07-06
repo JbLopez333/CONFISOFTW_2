@@ -61,6 +61,7 @@ function obtenerPedidosConItems($conn, $usuarioId = null) {
         $p['metodoPago']     = $p['metodo_pago'];
         $p['tiempoRecogida'] = (int) $p['tiempo_recogida'];
         $p['total']          = (float) $p['total'];
+        $p['fecha']          = date('d/m/Y, h:i a', strtotime($p['fecha']));
         $p['items']          = $itemsPorPedido[$p['id']] ?? [];
         unset($p['usuario_id'], $p['usuario_nombre'], $p['metodo_pago'], $p['tiempo_recogida']);
     }
@@ -87,7 +88,6 @@ switch ($method) {
         $tiempoRecogida = $data['tiempoRecogida'] ?? 20;
         $estado         = $data['estado'] ?? 'pendiente';
         $total          = $data['total'] ?? 0;
-        $fecha          = $data['fecha'] ?? date('d/m/Y, h:i a');
         $items          = $data['items'] ?? [];
 
         if (!$usuarioId || empty($items)) {
@@ -98,27 +98,43 @@ switch ($method) {
         try {
             $conn->beginTransaction();
 
+            // La fecha la genera la base de datos (now()) para evitar
+            // problemas de formato con la columna timestamp.
             $stmt = $conn->prepare("
-                INSERT INTO pedidos (usuario_id, usuario_nombre, metodo_pago, tiempo_recogida, estado, total, fecha)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO pedidos
+                    (usuario_id, cliente_id, usuario_nombre, metodo_pago, tiempo_recogida, estado, subtotal, iva, total, fecha)
+                VALUES
+                    (?, ?, ?, ?, ?, ?, ?, 0, ?, now())
                 RETURNING id
             ");
-            $stmt->execute([$usuarioId, $usuarioNombre, $metodoPago, $tiempoRecogida, $estado, $total, $fecha]);
+            $stmt->execute([
+                $usuarioId,
+                $usuarioId,       // cliente_id: usamos el mismo id del usuario que compra
+                $usuarioNombre,
+                $metodoPago,
+                $tiempoRecogida,
+                $estado,
+                $total,           // subtotal (simplificado: igual al total)
+                $total,
+            ]);
             $pedidoId = $stmt->fetchColumn();
 
             $stmtItem = $conn->prepare("
-                INSERT INTO detalle_pedidos (pedido_id, producto_id, nombre, emoji, precio, cantidad)
-                VALUES (?, ?, ?, ?, ?, ?)
+                INSERT INTO detalle_pedidos (pedido_id, producto_id, nombre, emoji, precio, cantidad, subtotal)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
             ");
 
             foreach ($items as $item) {
+                $precio    = $item['precio'] ?? 0;
+                $cantidad  = $item['cantidad'] ?? 1;
                 $stmtItem->execute([
                     $pedidoId,
                     $item['productoId'] ?? null,
                     $item['nombre'] ?? '',
                     $item['emoji'] ?? '📦',
-                    $item['precio'] ?? 0,
-                    $item['cantidad'] ?? 1,
+                    $precio,
+                    $cantidad,
+                    $precio * $cantidad,
                 ]);
             }
 
@@ -135,7 +151,6 @@ switch ($method) {
 
     case 'PUT':
 
-        // Solo se usa para actualizar el estado del pedido (pendiente / listo / entregado)
         parse_str($_SERVER['QUERY_STRING'], $params);
         $id = $params['id'] ?? null;
 
