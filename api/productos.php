@@ -61,10 +61,16 @@ switch ($method) {
                     p.iva,
                     p.imagen,
                     p.estado,
-                    COALESCE(i.stock_actual, 0) AS stock
+                    COALESCE(i.stock_actual, 0) AS stock,
+                    COALESCE(v.total_vendido, 0) AS vendidos
                 FROM productos p
                 LEFT JOIN categorias c ON p.categoria_id = c.id
                 LEFT JOIN inventario i ON i.producto_id = p.id
+                LEFT JOIN (
+                    SELECT producto_id, SUM(cantidad) AS total_vendido
+                    FROM detalle_pedidos
+                    GROUP BY producto_id
+                ) v ON v.producto_id = p.id
                 ORDER BY p.id DESC";
 
         $stmt = $conn->query($sql);

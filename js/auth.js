@@ -197,21 +197,24 @@ const StoreService = (() => {
     return getCarrito().reduce((acc, i) => acc + i.cantidad, 0);
   }
 
-  function crearPedido(usuario, metodoPago, tiempoRecogida) {
+  async function crearPedido(usuario, metodoPago, tiempoRecogida) {
     const items   = getCarrito();
     if (!items.length) return null;
-    const pedidos = db.getPedidos();
-    const nextId  = pedidos.length ? Math.max(...pedidos.map(p => p.id)) + 1 : 1;
-    const pedido  = new Pedido(nextId, usuario, items, metodoPago, tiempoRecogida);
-    // Guardar pedido
-    db.guardarPedido(pedido);
+
+    // id temporal en 0; se reemplaza por el id real que devuelve el servidor
+    const pedido  = new Pedido(0, usuario, items, metodoPago, tiempoRecogida);
+
+    const resultado = await db.guardarPedido(pedido);
+    if (!resultado || !resultado.success) return null;
+    pedido.id = resultado.id;
+
     // Registrar ganancia
     db.agregarGanancia(new RegistroGanancia(pedido.id, pedido.total));
     // Reducir stock
-    items.forEach(item => {
+    for (const item of items) {
       item.producto.reducirStock(item.cantidad);
-      db.actualizarProducto(item.producto);
-    });
+      await db.actualizarProducto(item.producto);
+    }
     // Notificación al admin
     const notif = new Notificacion(
       `🛒 Nuevo pedido ${pedido.idFmt}`,

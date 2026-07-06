@@ -233,7 +233,15 @@ const AdminApp = (() => {
   /* ══════════════════════════════════════════════════════════
      SECCIÓN: PEDIDOS ADMIN (historial todos)
      ══════════════════════════════════════════════════════════ */
-  function renderPedidosAdmin(c) {
+  async function renderPedidosAdmin(c) {
+    c.innerHTML = `
+      <h2 class="page-title">Pedidos de Clientes</h2>
+      <p class="page-sub">Historial completo de todas las compras.</p>
+      <div class="d-flex align-items-center justify-content-center" style="height:160px;color:var(--gris-400)">
+        <div class="text-center"><div style="font-size:28px">⏳</div><p class="mt-2">Cargando pedidos…</p></div>
+      </div>`;
+
+    await db.refrescarPedidos();
     const pedidos  = db.getPedidos();
     const totalRec = pedidos.reduce((a,p) => a+p.total, 0);
     c.innerHTML = `
@@ -268,8 +276,16 @@ const AdminApp = (() => {
   /* ══════════════════════════════════════════════════════════
      SECCIÓN: PEDIDOS EN TIEMPO REAL
      ══════════════════════════════════════════════════════════ */
-  function renderPedidosLive(c) {
+  async function renderPedidosLive(c) {
     const notifs  = db.getNotificaciones();
+    c.innerHTML = `
+      <h2 class="page-title">Pedidos en Tiempo Real</h2>
+      <p class="page-sub">Alertas y estado actualizado de pedidos activos.</p>
+      <div class="d-flex align-items-center justify-content-center" style="height:160px;color:var(--gris-400)">
+        <div class="text-center"><div style="font-size:28px">⏳</div><p class="mt-2">Cargando pedidos activos…</p></div>
+      </div>`;
+
+    await db.refrescarPedidos();
     const pedidos = db.getPedidos().filter(p => p.estado !== 'entregado');
     UI.updateNotifBadge();
 
@@ -338,8 +354,9 @@ const AdminApp = (() => {
     if (n) { n.leida = true; db.marcarTodasLeidas(); }
   }
 
-  function cambiarEstado(pedidoId, estado) {
-    db.actualizarEstadoPedido(pedidoId, estado);
+  async function cambiarEstado(pedidoId, estado) {
+    const resultado = await db.actualizarEstadoPedido(pedidoId, estado);
+    if (!resultado || !resultado.success) { UI.toast('⚠️ No se pudo actualizar el pedido'); return; }
     UI.toast(estado === 'listo' ? '✅ Pedido marcado como listo' : '📦 Pedido entregado');
     renderSection('pedidos-live');
   }
@@ -558,8 +575,9 @@ const AdminApp = (() => {
   function _hoy()   { return new Date().toLocaleDateString('es-CO'); }
 
   /* ══ 1. EXPORTAR PDF ══════════════════════════════════════ */
-  function exportarPDF(seccion) {
-    const win  = window.open('', '_blank');
+  async function exportarPDF(seccion) {
+    const win  = window.open('', '_blank'); // abrir antes del await, para no activar el bloqueador de pop-ups
+    await db.refrescarPedidos();
     const prods = db.getProductos();
     const peds  = db.getPedidos();
     const gans  = db.getGanancias();
@@ -689,7 +707,8 @@ const AdminApp = (() => {
   }
 
   /* ══ 2. EXPORTAR EXCEL ════════════════════════════════════ */
-  function exportarExcel(seccion) {
+  async function exportarExcel(seccion) {
+    await db.refrescarPedidos();
     const prods = db.getProductos();
     const peds  = db.getPedidos();
     const gans  = db.getGanancias();
@@ -797,7 +816,8 @@ const AdminApp = (() => {
   }
 
   /* ══ 3. EXPORTAR WORD ════════════════════════════════════ */
-  function exportarWord(seccion) {
+  async function exportarWord(seccion) {
+    await db.refrescarPedidos();
     const prods = db.getProductos();
     const peds  = db.getPedidos();
     const gans  = db.getGanancias();

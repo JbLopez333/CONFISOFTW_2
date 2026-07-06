@@ -219,13 +219,19 @@
       UI.openModal('modal-pasarela');
     }
 
-    function procesarPago() {
+    async function procesarPago() {
       const metodo = document.querySelector('.metodo-tab.active')?.dataset.metodo || 'efectivo';
       const errEl  = document.getElementById('pay-error');
       errEl.classList.remove('show');
 
+      const btnConfirmar = document.querySelector('#modal-pasarela .btn-rosa');
+      if (btnConfirmar) { btnConfirmar.disabled = true; btnConfirmar.textContent = 'Procesando...'; }
+
       const tiempo = parseInt(document.getElementById('pay-tiempo')?.value || '20');
-      const pedido = StoreService.crearPedido(currentUser, metodo, tiempo);
+      const pedido = await StoreService.crearPedido(currentUser, metodo, tiempo);
+
+      if (btnConfirmar) { btnConfirmar.disabled = false; btnConfirmar.textContent = '✅ Confirmar pago'; }
+
       if (!pedido) { errEl.textContent = 'Error al procesar el pedido.'; errEl.classList.add('show'); return; }
 
       UI.closeModal('modal-pasarela');
@@ -261,7 +267,15 @@
     /* ══════════════════════════════════════════════════════════
       SECCIÓN: HISTORIAL
       ══════════════════════════════════════════════════════════ */
-    function renderHistorial(c) {
+    async function renderHistorial(c) {
+      c.innerHTML = `
+        <h2 class="page-title">Mis Pedidos</h2>
+        <p class="page-sub">Revisa todas tus compras anteriores.</p>
+        <div class="d-flex align-items-center justify-content-center" style="height:160px;color:var(--gris-400)">
+          <div class="text-center"><div style="font-size:28px">⏳</div><p class="mt-2">Cargando tus pedidos…</p></div>
+        </div>`;
+
+      await db.refrescarPedidos(currentUser.id);
       const pedidos = db.getPedidosDeUsuario(currentUser.id);
 
       c.innerHTML = `

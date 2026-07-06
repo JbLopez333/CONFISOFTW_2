@@ -32,6 +32,7 @@ class Database {
       notifs:    'cc_notificaciones',
     };
     this._productosCache = [];
+    this._pedidosCache = [];
     this._inicializarDatosSemilla();
   }
 
@@ -229,7 +230,7 @@ async actualizarPass(email,nuevaPass){
         Number(p.stock),
         p.categoria || 'Sin categoría',
         p.imagen || '📦',
-        0
+        Number(p.vendidos) || 0
       ));
     } catch (e) {
       this._productosCache = this._productosCache || [];
@@ -290,31 +291,57 @@ async actualizarPass(email,nuevaPass){
      PEDIDOS
      ══════════════════════════════════════════════════════════ */
 
-  /** Obtiene todos los pedidos */
-  getPedidos() {
-    // API: const r = await fetch(`${API_BASE_URL}/pedidos`); return await r.json();
-    return this._cargar(this._keys.pedidos);
+  /** Descarga la lista real de pedidos desde Supabase y actualiza la caché.
+   *  Si se pasa usuarioId, trae solo los pedidos de ese usuario. */
+  async refrescarPedidos(usuarioId = null) {
+    try {
+      const url = usuarioId
+        ? `${API_BASE_URL}/pedidos.php?usuario_id=${usuarioId}`
+        : `${API_BASE_URL}/pedidos.php`;
+      const resp = await fetch(url);
+      this._pedidosCache = await resp.json();
+    } catch (e) {
+      this._pedidosCache = this._pedidosCache || [];
+    }
+    return this._pedidosCache;
   }
 
-  /** Pedidos de un usuario específico */
+  /** Obtiene todos los pedidos (desde la caché ya cargada con refrescarPedidos) */
+  getPedidos() {
+    return this._pedidosCache || [];
+  }
+
+  /** Pedidos de un usuario específico (filtra la caché ya cargada) */
   getPedidosDeUsuario(usuarioId) {
     return this.getPedidos().filter(p => p.usuarioId === usuarioId);
   }
 
-  /** Guarda un pedido */
-  guardarPedido(pedido) {
-    // API: const r = await fetch(`${API_BASE_URL}/pedidos`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(pedido.toJSON()) });
-    const lista = this._cargar(this._keys.pedidos);
-    lista.unshift(pedido.toJSON());
-    this._guardar(this._keys.pedidos, lista);
+  /** Guarda un pedido nuevo en Supabase */
+  async guardarPedido(pedido) {
+    try {
+      const resp = await fetch(`${API_BASE_URL}/pedidos.php`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(pedido.toJSON())
+      });
+      return await resp.json(); // { success, id }
+    } catch (e) {
+      return { success: false, mensaje: 'No fue posible conectar con el servidor.' };
+    }
   }
 
   /** Actualiza estado de un pedido */
-  actualizarEstadoPedido(pedidoId, estado) {
-    // API: await fetch(`${API_BASE_URL}/pedidos/${pedidoId}/estado`, { method:'PATCH', body: JSON.stringify({estado}) });
-    const lista = this._cargar(this._keys.pedidos);
-    const idx   = lista.findIndex(p => p.id === pedidoId);
-    if (idx !== -1) { lista[idx].estado = estado; this._guardar(this._keys.pedidos, lista); }
+  async actualizarEstadoPedido(pedidoId, estado) {
+    try {
+      const resp = await fetch(`${API_BASE_URL}/pedidos.php?id=${pedidoId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ estado })
+      });
+      return await resp.json();
+    } catch (e) {
+      return { success: false };
+    }
   }
 
   /* ══════════════════════════════════════════════════════════
