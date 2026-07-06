@@ -458,6 +458,7 @@ const AdminApp = (() => {
           <div style="display:flex;gap:6px;flex-wrap:wrap">
             <button class="btn btn-sm" style="background:var(--rosa-100);color:var(--rosa-700);border:1.5px solid var(--rosa-300)" onclick="AdminApp.editarUsuario(${u.id})">✏️ Editar</button>
             <button class="btn btn-sm btn-outline" onclick="AdminApp.toggleUsuario(${u.id})">${activo ? 'Desactivar' : 'Activar'}</button>
+            <button class="btn btn-sm btn-danger" onclick="AdminApp.eliminarUsuario(${u.id})">🗑️ Eliminar</button>
           </div>
         </td>
       </tr>`;
@@ -488,6 +489,33 @@ const AdminApp = (() => {
       refreshTablaUsuarios();
     } else {
       UI.toast('⚠️ ' + (resultado.mensaje || 'No se pudo actualizar el usuario'));
+    }
+  }
+
+  async function eliminarUsuario(id) {
+    const u = usuariosCache.find(x => Number(x.id) === Number(id));
+    if (!u) return;
+
+    if (Number(id) === Number(currentUser.id)) {
+      UI.toast('⚠️ No puedes eliminar tu propia cuenta.');
+      return;
+    }
+
+    if (!confirm(`¿Eliminar permanentemente a "${u.nombre} ${u.apellido}"? Esta acción no se puede deshacer.`)) {
+      return;
+    }
+
+    try {
+      const resp = await fetch(`../api/usuarios.php?id=${id}`, { method: 'DELETE' });
+      const resultado = await resp.json();
+      if (resultado.success) {
+        UI.toast('🗑️ Usuario eliminado correctamente');
+        refreshTablaUsuarios();
+      } else {
+        UI.toast('⚠️ ' + (resultado.mensaje || 'No se pudo eliminar el usuario'));
+      }
+    } catch (e) {
+      UI.toast('⚠️ No fue posible conectar con el servidor.');
     }
   }
 
@@ -937,7 +965,7 @@ const AdminApp = (() => {
       </div>`;
   }
 
-  return { init, renderSection, editarProducto, eliminarProducto, toggleUsuario, editarUsuario, marcarLeida, cambiarEstado, exportarPDF, exportarExcel, exportarWord, renderExportBar };
+  return { init, renderSection, editarProducto, eliminarProducto, toggleUsuario, editarUsuario, eliminarUsuario, marcarLeida, cambiarEstado, exportarPDF, exportarExcel, exportarWord, renderExportBar };
 })();
 
 document.addEventListener('DOMContentLoaded', AdminApp.init);
