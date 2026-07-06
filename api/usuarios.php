@@ -150,21 +150,29 @@ case "PUT":
     WHERE id=?
     ");
 
-    $ok = $stmt->execute([
-        $data["documento"],
-        $data["nombre"],
-        $data["apellido"],
-        $data["usuario"],
-        $data["correo"],
-        $data["telefono"],
-        $data["rol_id"],
-        $data["estado"],
-        $data["id"]
-    ]);
+    try {
+        $ok = $stmt->execute([
+            $data["documento"],
+            $data["nombre"],
+            $data["apellido"],
+            $data["usuario"],
+            $data["correo"],
+            $data["telefono"],
+            $data["rol_id"],
+            $data["estado"],
+            $data["id"]
+        ]);
 
-    echo json_encode([
-        "success" => $ok
-    ]);
+        echo json_encode([
+            "success" => $ok
+        ]);
+    } catch (PDOException $e) {
+        http_response_code(409);
+        echo json_encode([
+            "success" => false,
+            "mensaje" => "No se pudo guardar: el correo, usuario o documento ya está en uso por otra cuenta."
+        ]);
+    }
 
     break;
 
@@ -172,15 +180,22 @@ case "DELETE":
 
     parse_str($_SERVER["QUERY_STRING"], $params);
 
-    $stmt = $conn->prepare(
-        "DELETE FROM usuarios WHERE id=?"
-    );
+    try {
+        $stmt = $conn->prepare(
+            "DELETE FROM usuarios WHERE id=?"
+        );
+        $ok = $stmt->execute([$params["id"]]);
 
-    $ok = $stmt->execute([$params["id"]]);
-
-    echo json_encode([
-        "success" => $ok
-    ]);
+        echo json_encode([
+            "success" => $ok
+        ]);
+    } catch (PDOException $e) {
+        http_response_code(409);
+        echo json_encode([
+            "success" => false,
+            "mensaje" => "No se pudo eliminar: este usuario tiene registros relacionados (pedidos, notificaciones, etc.) que lo impiden."
+        ]);
+    }
 
     break;
 

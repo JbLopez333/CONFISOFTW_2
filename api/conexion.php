@@ -3,7 +3,6 @@
 // Conexión a Supabase (PostgreSQL) usando PDO.
 // En Vercel: configura estas 5 variables en
 // Project Settings > Environment Variables (mismos nombres, EXACTOS).
-// Los valores los sacas del botón "Connect" en tu proyecto de Supabase.
 $host     = getenv("DB_HOST")     ?: "TU_HOST_DE_SUPABASE";
 $port     = getenv("DB_PORT")     ?: "5432";
 $dbname   = getenv("DB_NAME")     ?: "postgres";
