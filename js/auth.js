@@ -37,6 +37,7 @@ const AuthService = (() => {
   function logout() {
     sessionStorage.removeItem(SESSION_KEY);
     StoreService.vaciarCarrito();
+    sessionStorage.setItem('cc_logout_msg', '1');
     window.location.href = '../app.html';
   }
 

@@ -4,11 +4,36 @@
  */
 'use strict';
 
+/**
+ * Valida que una contraseña sea segura.
+ * Devuelve null si es válida, o un mensaje de error si no cumple.
+ */
+function validarPasswordSegura(pass) {
+  if (pass.length < 8) {
+    return 'La contraseña debe tener al menos 8 caracteres.';
+  }
+  if (!/[A-Z]/.test(pass)) {
+    return 'La contraseña debe contener al menos una letra mayúscula.';
+  }
+  if (!/[0-9]/.test(pass)) {
+    return 'La contraseña debe contener al menos un número.';
+  }
+  if (!/[^A-Za-z0-9]/.test(pass)) {
+    return 'La contraseña debe contener al menos un símbolo (ej: !@#$%&*).';
+  }
+  return null;
+}
+
 /* ── LOGIN ── */
 const LoginController = (() => {
   let resetEmail = '';
 
   function init() {
+    if (sessionStorage.getItem('cc_logout_msg')) {
+      sessionStorage.removeItem('cc_logout_msg');
+      setTimeout(() => UI.toast('✅ Sesión cerrada correctamente'), 100);
+    }
+
     document.getElementById('btn-login')?.addEventListener('click', doLogin);
     document.getElementById('login-pass')?.addEventListener('keydown', e => {
         if (e.key === 'Enter') doLogin();
@@ -138,8 +163,9 @@ async function guardarNuevaPass() {
 
     hideErr("forgot-error-3");
 
-    if (p1.length < 6) {
-        showErr("forgot-error-3", "La contraseña debe tener al menos 6 caracteres.");
+    const errorPass = validarPasswordSegura(p1);
+    if (errorPass) {
+        showErr("forgot-error-3", errorPass);
         return;
     }
 
@@ -266,7 +292,8 @@ const RegisterController = (() => {
     const pass  = document.getElementById('reg-pass').value;
     const pass2 = document.getElementById('reg-pass2').value;
     const terms = document.getElementById('reg-terms').checked;
-    if (pass.length < 6) { showErr(3, 'Contraseña mínimo 6 caracteres.'); return; }
+    const errorPass = validarPasswordSegura(pass);
+    if (errorPass)       { showErr(3, errorPass); return; }
     if (pass !== pass2)  { showErr(3, 'Las contraseñas no coinciden.'); return; }
     if (!terms)          { showErr(3, 'Acepta los términos y condiciones.'); return; }
     regData.pass = pass;

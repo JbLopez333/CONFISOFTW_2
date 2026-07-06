@@ -383,6 +383,11 @@ const AdminApp = (() => {
     c.innerHTML = `
       <h2 class="page-title">Historial de Usuarios</h2>
       <p class="page-sub">Gestión y estado de todos los usuarios registrados.</p>
+      <div class="search-bar" style="margin-bottom:16px">
+        <span>🔍</span>
+        <input id="search-users" placeholder="Buscar por nombre, apellido o correo..." />
+        <span class="search-count" id="search-users-count"></span>
+      </div>
       <div class="table-wrap">
         <table>
           <thead><tr><th>Usuario</th><th>Correo</th><th>Rol</th><th>Tel.</th><th>Registrado</th><th>Últ. inicio de sesión</th><th>Estado</th><th>Acciones</th></tr></thead>
@@ -419,7 +424,16 @@ const AdminApp = (() => {
       select.innerHTML = roles.map(r => `<option value="${r.id}">${r.nombre}</option>`).join('');
     }
 
-    refreshTablaUsuarios();
+    document.getElementById('search-users')?.addEventListener('input', function () {
+      const term = this.value.trim().toLowerCase();
+      const filtrados = usuariosCache.filter(u =>
+        `${u.nombre} ${u.apellido}`.toLowerCase().includes(term) ||
+        (u.correo || '').toLowerCase().includes(term)
+      );
+      renderFilaUsuarios(filtrados);
+    });
+
+    await refreshTablaUsuarios();
   }
 
   async function refreshTablaUsuarios() {
@@ -435,12 +449,22 @@ const AdminApp = (() => {
       return;
     }
 
-    if (!Array.isArray(usuariosCache) || usuariosCache.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:24px">Aún no hay usuarios registrados.</td></tr>`;
+    renderFilaUsuarios(usuariosCache);
+  }
+
+  function renderFilaUsuarios(lista) {
+    const tbody = document.getElementById('tbody-users');
+    if (!tbody) return;
+
+    const countEl = document.getElementById('search-users-count');
+    if (countEl) countEl.textContent = lista.length + (lista.length === 1 ? ' usuario' : ' usuarios');
+
+    if (!Array.isArray(lista) || lista.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:24px">No se encontraron usuarios.</td></tr>`;
       return;
     }
 
-    tbody.innerHTML = usuariosCache.map(u => {
+    tbody.innerHTML = lista.map(u => {
       const activo = Number(u.estado) === 1;
       const inicial = (u.nombre || '?').charAt(0).toUpperCase();
       const registrado = u.fecha_registro ? new Date(u.fecha_registro).toLocaleDateString('es-CO') : '—';
